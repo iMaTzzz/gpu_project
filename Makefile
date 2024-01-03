@@ -2,7 +2,7 @@ CC = gcc
 LD = gcc
 # NVCC COMPILER OPTIONS:
 NVCC = nvcc
-NVCC_FLAGS=
+NVCC_FLAGS=-Iinclude
 NVCC_LIBS=
 
 

@@ -3,19 +3,15 @@
 #include "../include/qtables.h"
 #include <math.h>
 
-__constant__ const uint8_t quantification_table_Y[64];
-__constant__ const uint8_t quantification_table_CbCr[64];
-
-
 __global__ void quantify_kernel(int16_t *array, bool luminance)
 {
     uint32_t thread_id = blockIdx.x * blockDim.x + threadId.x;
 
     if (thread_id < 64) {
         if (luminance) {
-            array[thread_id] = array[thread_id] / quantification_table_Y[thread_id]
+            array[thread_id] = array[thread_id] / quantification_table_Y[thread_id];
         } else {
-            array[thread_id] = array[thread_id] / quantification_table_CbCr[thread_id]
+            array[thread_id] = array[thread_id] / quantification_table_CbCr[thread_id];
         }
     }
 }
@@ -82,7 +78,7 @@ void quantify(int16_t *array, bool luminance)
     int16_t *array_copy = malloc(64*sizeof(int16_t));
     // Create a copy of the original array
     for (int i = 0; i < 64; ++i) {
-        array_copy[i] = array[i]
+        array_copy[i] = array[i];
     }
     
     // Run this on CPU
