@@ -44,7 +44,7 @@ void quantify_gpu(int16_t *h_array, bool luminance)
     }
 
     // Copy result of computation back on host
-    // cudaMemcpy is a synchronous call and will therefore wait for kernel completion (serves as synchronization barrier)
+    // cudaMemcpy will wait for kernel completion (acts as synchronization barrier)
     cudaMemcpy(h_array, d_array, size, cudaMemcpyDeviceToHost);
 
     cudaFree(d_array);
@@ -60,7 +60,7 @@ void verify_result(int16_t *array_cpu, int16_t *array_gpu)
 /*
     Quantifier le bloc 8x8 (qui a été transformé en array zigzag)
     Entrées : array int16_t de taille 64 et un bool qui vérifier si on est dans le cas Y ou CbCr
-    Sortie : Rien 
+    Sortie : Rien
 */
 void quantify_cpu(int16_t *array, bool luminance)
 {
@@ -84,7 +84,7 @@ void quantify(int16_t *array, bool luminance)
     for (int i = 0; i < 64; ++i) {
         array_copy[i] = array[i];
     }
-    
+
     // Run this on CPU
     quantify_cpu(array, luminance);
 
