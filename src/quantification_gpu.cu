@@ -1,6 +1,6 @@
 // Quantification step, GPU version
 #include <stdint.h>
-#include "qtables.h"
+#include "../include/qtables.h"
 #include <math.h>
 
 __constant__ const uint8_t quantification_table_Y[64];
