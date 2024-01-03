@@ -1,6 +1,9 @@
 // Quantification step, GPU version
 #include <stdint.h>
 #include <qtables.h>
+// for ceil function
+#include <cmath> // for c++
+// #include <math.h> // for c
 
 __constant__ const uint8_t quantification_table_Y[64];
 __constant__ const uint8_t quantification_table_CbCr[64];
@@ -19,7 +22,7 @@ __global__ void quantify_kernel(int16_t *array, bool luminance)
     }
 }
 
-void quantify_gpu(int16_t *array, bool luminance)
+void quantify_gpu(int16_t *h_array, bool luminance)
 {
     // Give size to allocate on GPU
     const int size = 64*sizeof(int16_t);
@@ -36,17 +39,17 @@ void quantify_gpu(int16_t *array, bool luminance)
 
     // TODO
     // Define block size and grid size
-    const dim3 block_size(32, 8, 1);
-    const dim3 grid_size(ceil(64 / block_size.x), 8, 1);
+    const dim3 block_size(64);
+    const dim3 grid_size((int)ceil(64 / block_size.x)); // 1 grid
 
     // Execute kernel
     quantify_kernel<<<grid_size, block_size>>>(d_array, d_luminance);
 
-    // Wait for kernel completion
-    cudaDeviceSynchronize();
-
     // Copy result of computation back on host
+    // cudaMemcpy is a synchronous call and will therefore wait for kernel completion (serves as synchronization barrier)
     cudaMemcpy(h_array, d_array, size, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_array);
 }
 
 void verify_result(int16_t *array_cpu, int16_t *array_gpu)
