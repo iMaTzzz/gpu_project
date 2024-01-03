@@ -79,7 +79,7 @@ void quantify_cpu(int16_t *array, bool luminance)
 
 void quantify(int16_t *array, bool luminance)
 {
-    int16_t *array_copy = malloc(64*sizeof(int16_t));
+    int16_t *array_copy = (int16_t *)malloc(64*sizeof(int16_t));
     // Create a copy of the original array
     for (int i = 0; i < 64; ++i) {
         array_copy[i] = array[i];
