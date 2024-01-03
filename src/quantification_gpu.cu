@@ -49,7 +49,7 @@ void quantify_gpu(int16_t *h_array, bool luminance)
 void verify_result(int16_t *array_cpu, int16_t *array_gpu)
 {
     for (int i = 0; i < 64; ++i) {
-        assert(array_cpu[i] == array_gpu);
+        assert(array_cpu[i] == array_gpu[i]);
     }
 }
 
