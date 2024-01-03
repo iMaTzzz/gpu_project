@@ -18,7 +18,7 @@ SRC_FILES=$(wildcard src/*.c)
 CUDA_SRC_FILES=$(wildcard src/*.cu)
 
 # Par défaut, la compilation de src/toto.c génère le fichier objet obj/toto.o
-OBJ_FILES=$(wildcard obj/*.o)
+OBJ_FILES=$(patsubst src/%.c,obj/%.o,$(SRC_FILES))
 CUDA_OBJ_FILES = $(patsubst src/%.cu,obj/%.o,$(CUDA_SRC_FILES))
 
 # Fichiers objet "prof". Lorsque vous aurez implémenté un de ces modules, il
