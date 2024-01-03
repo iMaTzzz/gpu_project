@@ -5,7 +5,7 @@
 
 __global__ void quantify_kernel(int16_t *array, bool luminance)
 {
-    uint32_t thread_id = blockIdx.x * blockDim.x + threadId.x;
+    uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (thread_id < 64) {
         if (luminance) {
