@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "../include/qtables.h"
 #include <math.h>
+#include <assert.h>
 
 __global__ void quantify_kernel_Y(int16_t *array)
 {
