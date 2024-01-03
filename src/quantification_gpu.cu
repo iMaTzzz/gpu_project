@@ -1,6 +1,6 @@
 // Quantification step, GPU version
 #include <stdint.h>
-#include <qtables.h>
+#include "qtables.h"
 // for ceil function
 #include <cmath> // for c++
 // #include <math.h> // for c
