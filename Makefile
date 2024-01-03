@@ -1,5 +1,5 @@
 CC = gcc
-LD = nvcc
+LD = gcc
 
 # -O0 désactive les optimisations à la compilation
 # C'est utile pour débugger, par contre en "production"
@@ -21,16 +21,15 @@ OBJ_FILES=$(patsubst src/%.c,obj/%.o,$(SRC_FILES))
 OBJ_PROF_FILES = obj_prof/htables_prof.o \
                  obj_prof/bitstream_prof.o 
 
-# Nouveau règle pour compiler les fichiers .cu
-obj/%.cu.o: src/%.cu
-    nvcc -c $(CFLAGS) $< -o $@
-
 all: ppm2jpeg
 
-ppm2jpeg: $(OBJ_FILES) $(OBJ_PROF_FILES) obj/quantification_gpu.cu.o
-    nvcc $(OBJ_FILES) $(OBJ_PROF_FILES) obj/quantification_gpu.cu.o $(LDFLAGS) -o $@
+ppm2jpeg: $(OBJ_FILES) $(OBJ_PROF_FILES)
+	$(LD) $(OBJ_FILES) $(OBJ_PROF_FILES) $(LDFLAGS) -o $@
+
+obj/%.o: src/%.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
 .PHONY: clean
 
 clean:
-    rm -rf ppm2jpeg $(OBJ_FILES)
+	rm -rf ppm2jpeg $(OBJ_FILES)
