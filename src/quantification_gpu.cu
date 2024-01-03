@@ -3,16 +3,19 @@
 #include "../include/qtables.h"
 #include <math.h>
 
-__global__ void quantify_kernel(int16_t *array, bool luminance)
+__global__ void quantify_kernel_Y(int16_t *array)
 {
     uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-
     if (thread_id < 64) {
-        if (luminance) {
-            array[thread_id] = array[thread_id] / quantification_table_Y[thread_id];
-        } else {
-            array[thread_id] = array[thread_id] / quantification_table_CbCr[thread_id];
-        }
+        array[thread_id] = array[thread_id] / quantification_table_Y[thread_id];
+    }
+}
+
+__global__ void quantify_kernel_CbCr(int16_t *array)
+{
+    uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (thread_id < 64) {
+        array[thread_id] = array[thread_id] / quantification_table_CbCr[thread_id];
     }
 }
 
@@ -23,13 +26,10 @@ void quantify_gpu(int16_t *h_array, bool luminance)
 
     // Allocate memory on the device
     int16_t *d_array;
-    bool d_luminance;
     cudaMalloc(&d_array, size);
-    cudaMalloc(&d_luminance, sizeof(bool));
 
     // Copy data from the host to the device (CPU -> GPU)
     cudaMemcpy(d_array, h_array, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_luminance, luminance, sizeof(bool), cudaMemcpyHostToDevice);
 
     // TODO
     // Define block size and grid size
@@ -37,7 +37,11 @@ void quantify_gpu(int16_t *h_array, bool luminance)
     const dim3 grid_size((int)ceil(64 / block_size.x)); // 1 grid
 
     // Execute kernel
-    quantify_kernel<<<grid_size, block_size>>>(d_array, d_luminance);
+    if (luminance) {
+        quantify_kernel_Y<<<grid_size, block_size>>>(d_array);
+    } else {
+        quantify_kernel_CbCr<<<grid_size, block_size>>>(d_array);
+    }
 
     // Copy result of computation back on host
     // cudaMemcpy is a synchronous call and will therefore wait for kernel completion (serves as synchronization barrier)
