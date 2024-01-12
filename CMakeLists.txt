@@ -31,6 +31,8 @@ set(OBJ_PROF_FILES obj_prof/htables_prof.o obj_prof/bitstream_prof.o)
 # Executable
 add_executable(ppm2jpeg ${SRC_FILES} ${CUDA_SRC_FILES} ${OBJ_PROF_FILES})
 # set_target_properties(ppm2jpeg PROPERTIES LINKER_LANGUAGE C)
+# we want cmake to automatically detect the architectures of the available GPUs
+set_target_properties(ppm2jpeg PROPERTIES CUDA_ARCHITECTURES OFF)
 
 # Link libraries
 find_package(CUDA REQUIRED)
