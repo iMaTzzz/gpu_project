@@ -29,11 +29,11 @@ endforeach()
 set(OBJ_PROF_FILES obj_prof/htables_prof.o obj_prof/bitstream_prof.o)
 
 # Executable
-add_executable(ppm2jpeg ${OBJ_FILES} ${CUDA_OBJ_FILES} ${OBJ_PROF_FILES})
+add_executable(ppm2jpeg ${SRC_FILES} ${CUDA_SRC_FILES} ${OBJ_PROF_FILES})
 
 # Link libraries
 find_package(CUDA REQUIRED)
-target_link_libraries(ppm2jpeg ${CUDA_LIBRARIES} m cudart)
+target_link_libraries(ppm2jpeg CUDA::m cudart)
 
 # CUDA libraries directories
 link_directories(/usr/local/cuda/lib64)
