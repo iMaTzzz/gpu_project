@@ -42,26 +42,26 @@ target_link_libraries(ppm2jpeg cudart m)
 link_directories(/usr/local/cuda/lib64)
 
 # Custom target for creating object files from C sources
-foreach(SRC_FILE ${SRC_FILES})
-  get_filename_component(OBJ_NAME ${SRC_FILE} NAME_WE)
-  set(OBJ_FILE "obj/${OBJ_NAME}.o")
-  add_custom_command(
-    OUTPUT ${OBJ_FILE}
-    COMMAND ${CMAKE_C_COMPILER} -c ${CMAKE_C_FLAGS} ${SRC_FILE} -o ${OBJ_FILE}
-    DEPENDS ${SRC_FILE}
-  )
-endforeach()
+# foreach(SRC_FILE ${SRC_FILES})
+#   get_filename_component(OBJ_NAME ${SRC_FILE} NAME_WE)
+#   set(OBJ_FILE "obj/${OBJ_NAME}.o")
+#   add_custom_command(
+#     OUTPUT ${OBJ_FILE}
+#     COMMAND ${CMAKE_C_COMPILER} -c ${CMAKE_C_FLAGS} ${SRC_FILE} -o ${OBJ_FILE}
+#     DEPENDS ${SRC_FILE}
+#   )
+# endforeach()
 
 # Custom target for creating object files from CUDA sources
-foreach(CUDA_SRC_FILE ${CUDA_SRC_FILES})
-  get_filename_component(CUDA_OBJ_NAME ${CUDA_SRC_FILE} NAME_WE)
-  set(CUDA_OBJ_FILE "obj/${CUDA_OBJ_NAME}.o")
-  add_custom_command(
-    OUTPUT ${CUDA_OBJ_FILE}
-    COMMAND ${CMAKE_CUDA_COMPILER} -c ${CMAKE_CUDA_FLAGS} ${CUDA_SRC_FILE} -o ${CUDA_OBJ_FILE}
-    DEPENDS ${CUDA_SRC_FILE}
-  )
-endforeach()
+# foreach(CUDA_SRC_FILE ${CUDA_SRC_FILES})
+#   get_filename_component(CUDA_OBJ_NAME ${CUDA_SRC_FILE} NAME_WE)
+#   set(CUDA_OBJ_FILE "obj/${CUDA_OBJ_NAME}.o")
+#   add_custom_command(
+#     OUTPUT ${CUDA_OBJ_FILE}
+#     COMMAND ${CMAKE_CUDA_COMPILER} -c ${CMAKE_CUDA_FLAGS} ${CUDA_SRC_FILE} -o ${CUDA_OBJ_FILE}
+#     DEPENDS ${CUDA_SRC_FILE}
+#   )
+# endforeach()
 
 # Add clean target
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OBJ_FILES};${CUDA_OBJ_FILES};ppm2jpeg")
