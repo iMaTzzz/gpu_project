@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(gpu_project LANGUAGES C CUDA)
 
+set(CMAKE_CUDA_STANDARD 14)
+
 # Set C and CUDA compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -O2")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Iinclude")
