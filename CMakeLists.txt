@@ -13,17 +13,17 @@ file(GLOB SRC_FILES "src/*.c")
 file(GLOB CUDA_SRC_FILES "src/*.cu")
 
 # Object files
-set(OBJ_FILES "")
-foreach(SRC_FILE ${SRC_FILES})
-  get_filename_component(OBJ_NAME ${SRC_FILE} NAME_WE)
-  list(APPEND OBJ_FILES "obj/${OBJ_NAME}.o")
-endforeach()
+# set(OBJ_FILES "")
+# foreach(SRC_FILE ${SRC_FILES})
+#   get_filename_component(OBJ_NAME ${SRC_FILE} NAME_WE)
+#   list(APPEND OBJ_FILES "obj/${OBJ_NAME}.o")
+# endforeach()
 
-set(CUDA_OBJ_FILES "")
-foreach(CUDA_SRC_FILE ${CUDA_SRC_FILES})
-  get_filename_component(CUDA_OBJ_NAME ${CUDA_SRC_FILE} NAME_WE)
-  list(APPEND CUDA_OBJ_FILES "obj/${CUDA_OBJ_NAME}.o")
-endforeach()
+# set(CUDA_OBJ_FILES "")
+# foreach(CUDA_SRC_FILE ${CUDA_SRC_FILES})
+#   get_filename_component(CUDA_OBJ_NAME ${CUDA_SRC_FILE} NAME_WE)
+#   list(APPEND CUDA_OBJ_FILES "obj/${CUDA_OBJ_NAME}.o")
+# endforeach()
 
 # Prof object files - adjust as needed
 set(OBJ_PROF_FILES obj_prof/htables_prof.o obj_prof/bitstream_prof.o)
@@ -64,5 +64,5 @@ link_directories(/usr/local/cuda/lib64)
 # endforeach()
 
 # Add clean target
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OBJ_FILES};${CUDA_OBJ_FILES};ppm2jpeg")
+# set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OBJ_FILES};${CUDA_OBJ_FILES};ppm2jpeg")
 
