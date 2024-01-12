@@ -10,7 +10,7 @@ NVCC_LIBS=
 # C'est utile pour débugger, par contre en "production"
 # on active au moins les optimisations de niveau 2 (-O2).
 CFLAGS = -Wall -Wextra -std=c99 -Iinclude -O2
-LDFLAGS = -lm -L /usr/local/cuda/lib64
+LDFLAGS = -lm -L /usr/local/cuda/lib64 -lcudart
 
 # Par défaut, on compile tous les fichiers source (.c) qui se trouvent dans le
 # répertoire src/
