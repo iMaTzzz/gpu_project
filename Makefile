@@ -1,5 +1,5 @@
 CC = gcc
-LD = gcc
+LD = g++
 # NVCC COMPILER OPTIONS:
 NVCC = nvcc
 NVCC_FLAGS=-Iinclude
@@ -33,7 +33,7 @@ all: ppm2jpeg
 ppm2jpeg: $(OBJ_FILES) $(OBJ_PROF_FILES) $(CUDA_OBJ_FILES)
 	$(LD) $(OBJ_FILES) $(OBJ_PROF_FILES) $(CUDA_OBJ_FILES) $(LDFLAGS) -o $@
 
-# Compile C source files to obejct files:
+# Compile C source files to object files:
 obj/%.o: src/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
