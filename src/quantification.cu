@@ -3,8 +3,9 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
+#include "qtables.h"
 
-__managed__ static uint8_t quantification_table_Y[] = {
+__constant__ uint8_t cuda_quantification_table_Y[] = {
     0x05, 0x03, 0x03, 0x05, 0x07, 0x0c, 0x0f, 0x12,
     0x04, 0x04, 0x04, 0x06, 0x08, 0x11, 0x12, 0x11,
     0x04, 0x04, 0x05, 0x07, 0x0c, 0x11, 0x15, 0x11,
@@ -15,7 +16,7 @@ __managed__ static uint8_t quantification_table_Y[] = {
     0x16, 0x1c, 0x1d, 0x1d, 0x22, 0x1e, 0x1f, 0x1e
 };
 
-__managed__ static uint8_t quantification_table_CbCr[] = {
+__constant__ uint8_t cuda_quantification_table_CbCr[] = {
     0x05, 0x05, 0x07, 0x0e, 0x1e, 0x1e, 0x1e, 0x1e,
     0x05, 0x06, 0x08, 0x14, 0x1e, 0x1e, 0x1e, 0x1e,
     0x07, 0x08, 0x11, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e,
@@ -30,7 +31,7 @@ __global__ void quantify_kernel_Y(int16_t *array)
 {
     uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     if (thread_id < 64) {
-        array[thread_id] = array[thread_id] / quantification_table_Y[thread_id];
+        array[thread_id] = array[thread_id] / cuda_quantification_table_Y[thread_id];
     }
 }
 
@@ -38,7 +39,7 @@ __global__ void quantify_kernel_CbCr(int16_t *array)
 {
     uint32_t thread_id = blockIdx.x * blockDim.x + threadIdx.x;
     if (thread_id < 64) {
-        array[thread_id] = array[thread_id] / quantification_table_CbCr[thread_id];
+        array[thread_id] = array[thread_id] / cuda_quantification_table_CbCr[thread_id];
     }
 }
 
