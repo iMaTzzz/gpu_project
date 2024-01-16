@@ -5,6 +5,7 @@
 #include <math.h>
 #include "zigzag.h"
 #include <iostream>
+#include <assert.h>
 
 /* Constantes utilisées dans les deux versions des algorithmes de Loeffler */
 #define VALUE_0_765366865 0.765366865
