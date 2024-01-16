@@ -105,21 +105,22 @@ extern "C"
 void quantify(int16_t *array, bool luminance)
 {
     printf("On rentre dans quantify\n");
-    int16_t *array_copy = (int16_t *)malloc(64*sizeof(int16_t));
-    // Create a copy of the original array
-    for (int i = 0; i < 64; ++i) {
-        array_copy[i] = array[i];
-    }
-    printf("On crée une copie du tableau original\n");
+    //int16_t *array_copy = (int16_t *)malloc(64*sizeof(int16_t));
+    //// Create a copy of the original array
+    //for (int i = 0; i < 64; ++i) {
+        //array_copy[i] = array[i];
+    //}
+    //printf("On crée une copie du tableau original\n");
 
-    // Run this on CPU
-    quantify_cpu(array, luminance);
-    printf("Quantify_cpu fait\n");
+    //// Run this on CPU
+    //quantify_cpu(array, luminance);
+    //printf("Quantify_cpu fait\n");
 
     // Run this on GPU
-    quantify_gpu(array_copy, luminance);
+    //quantify_gpu(array_copy, luminance);
+    quantify_gpu(array, luminance);
     printf("Quantify_gpu fait\n");
 
-    verify_result(array, array_copy);
-    printf("Check result fait\n");
+    //verify_result(array, array_copy);
+    //printf("Check result fait\n");
 }
