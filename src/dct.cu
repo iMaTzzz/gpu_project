@@ -49,10 +49,9 @@ Ainsi, pour calculer la 2D-DCT pour un bloc 8x8, il suffit d'appliquer l'algorit
 coefficients voulus.
 */
 
-__global__ void dct_kernel(uint8_t *bloc_spatiale, uint16_t *output_mcu_array) {
+__global__ void dct_kernel(uint8_t *bloc_spatiale, int16_t *output_mcu_array) {
   // temporary data structure used by all threads within a block
   __shared__ int32_t shared_block[8][8];
-  __shared__ uint8_t bloc_spatiale_width = 8;
 
   uint32_t x = blockIdx.x * blockDim.x + threadIdx.x;
   uint32_t y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -60,6 +59,7 @@ __global__ void dct_kernel(uint8_t *bloc_spatiale, uint16_t *output_mcu_array) {
   // check if within bounds
   if (x < 8 && y < 8) {
     int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+    const uint8_t bloc_spatiale_width = 8;
 
     /***** perform row-wise DCT computation *****/
     tmp0 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 0] + bloc_spatiale[y * bloc_spatiale_width + 7] - 256);
@@ -161,7 +161,7 @@ void gpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *h_mcu_array)
   const uint8_t array_size = n_rows * n_cols;
 
   // flatten 2D bloc_spatiale to 1D array for better performances in gpu
-  const uint8_t flattened_bloc_spatiale[array_size];
+  uint8_t flattened_bloc_spatiale[array_size];
   for (uint8_t row = 0; row < n_rows; row++)
     memcpy(flattened_bloc_spatiale + row * n_cols, bloc_spatiale[row], n_cols * sizeof(uint8_t));
 
