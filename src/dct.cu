@@ -39,6 +39,7 @@ coefficients voulus.
 
 
 /* Fonction qui applique la transformée 2D grâce à l'algorithme de Loeffler non optimisé mais précis */
+extern "C"
 void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
 {
   int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
