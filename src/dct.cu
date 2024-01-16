@@ -52,6 +52,7 @@ coefficients voulus.
 __global__ void dct_kernel(uint8_t *bloc_spatiale, uint16_t *output_mcu_array) {
   // temporary data structure used by all threads within a block
   __shared__ int32_t shared_block[8][8];
+  __shared__ uint8_t bloc_spatiale_width = 8;
 
   uint32_t x = blockIdx.x * blockDim.x + threadIdx.x;
   uint32_t y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -61,10 +62,10 @@ __global__ void dct_kernel(uint8_t *bloc_spatiale, uint16_t *output_mcu_array) {
     int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
 
     /***** perform row-wise DCT computation *****/
-    tmp0 = (int32_t) (bloc_spatiale[y][0] + bloc_spatiale[y][7] - 256);
-    tmp1 = (int32_t) (bloc_spatiale[y][1] + bloc_spatiale[y][6] - 256);
-    tmp2 = (int32_t) (bloc_spatiale[y][2] + bloc_spatiale[y][5] - 256);
-    tmp3 = (int32_t) (bloc_spatiale[y][3] + bloc_spatiale[y][4] - 256);
+    tmp0 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 0] + bloc_spatiale[y * bloc_spatiale_width + 7] - 256);
+    tmp1 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 1] + bloc_spatiale[y * bloc_spatiale_width + 6] - 256);
+    tmp2 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 2] + bloc_spatiale[y * bloc_spatiale_width + 5] - 256);
+    tmp3 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 3] + bloc_spatiale[y * bloc_spatiale_width + 4] - 256);
 
     tmp4 = tmp0 + tmp3;
     tmp5 = tmp1 + tmp2;
@@ -79,10 +80,10 @@ __global__ void dct_kernel(uint8_t *bloc_spatiale, uint16_t *output_mcu_array) {
     shared_block[y][2] = tmp8 + tmp6 * VALUE_0_765366865;
     shared_block[y][6] = tmp8 - tmp7 * VALUE_1_847759065;
 
-    tmp0 = (int32_t) (bloc_spatiale[y][0] - bloc_spatiale[y][7]);
-    tmp1 = (int32_t) (bloc_spatiale[y][1] - bloc_spatiale[y][6]);
-    tmp2 = (int32_t) (bloc_spatiale[y][2] - bloc_spatiale[y][5]);
-    tmp3 = (int32_t) (bloc_spatiale[y][3] - bloc_spatiale[y][4]);
+    tmp0 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 0] - bloc_spatiale[y * bloc_spatiale_width + 7]);
+    tmp1 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 1] - bloc_spatiale[y * bloc_spatiale_width + 6]);
+    tmp2 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 2] - bloc_spatiale[y * bloc_spatiale_width + 5]);
+    tmp3 = (int32_t) (bloc_spatiale[y * bloc_spatiale_width + 3] - bloc_spatiale[y * bloc_spatiale_width + 4]);
 
     tmp6 = tmp0 + tmp2;
     tmp7 = tmp1 + tmp3;
