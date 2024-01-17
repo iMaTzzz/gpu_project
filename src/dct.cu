@@ -297,20 +297,20 @@ void verify_result(int16_t mcu_array[64], int16_t mcu_array_copy[64])
 extern "C"
 void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
 {
-  std::cout << "--- beginning of dct_loeffler --- " << std::endl;
+  // std::cout << "--- beginning of dct_loeffler --- " << std::endl;
 
-  int16_t mcu_array_copy[64];
-  for (uint8_t i = 0; i < 64; i++) {
-    mcu_array_copy[i] = mcu_array[i];
-  }
-  std::cout << "--- after copy of mcu_array --- " << std::endl;
+  // int16_t mcu_array_copy[64];
+  // for (uint8_t i = 0; i < 64; i++) {
+  //   mcu_array_copy[i] = mcu_array[i];
+  // }
+  // std::cout << "--- after copy of mcu_array --- " << std::endl;
 
   cpu_dct_loeffler(bloc_spatiale, mcu_array);
-  std::cout << "--- after cpu_dct_loeffler --- " << std::endl;
+  // std::cout << "--- after cpu_dct_loeffler --- " << std::endl;
 
-  gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
-  std::cout << "--- after gpu_dct_loeffler --- " << std::endl;
+  // gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
+  // std::cout << "--- after gpu_dct_loeffler --- " << std::endl;
 
-  verify_result(mcu_array, mcu_array_copy);
-  std::cout << "--- after verify_result --- " << std::endl;
+  // verify_result(mcu_array, mcu_array_copy);
+  // std::cout << "--- after verify_result --- " << std::endl;
 }
