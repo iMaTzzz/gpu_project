@@ -178,13 +178,12 @@ void gpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *h_mcu_array)
 
   // call kernel
   const dim3 block_size(8, 8);
-  // TODO: not sure of the grid_size (maybe just 1 bloc in grid?)
   const dim3 grid_size((n_cols + block_size.x - 1) / block_size.x, (n_rows + block_size.y - 1) / block_size.y);
   dct_kernel<<<grid_size, block_size>>>(d_bloc_spatiale, d_mcu_array);
 
   // Copy result of gpu computation back on host
   // cudaMemcpy will wait for kernel completion (acts as synchronization barrier)
-  cudaMemcpy(h_mcu_array, d_mcu_array, array_size, cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_mcu_array, d_mcu_array, array_size * sizeof(int16_t), cudaMemcpyDeviceToHost);
 
   // free allocated gpu memory
   cudaFree(d_bloc_spatiale);
