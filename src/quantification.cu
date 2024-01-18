@@ -74,7 +74,7 @@ void quantify_gpu(int16_t *h_array, bool luminance)
     cudaFree(d_array);
 }
 
-void verify_result(int16_t *array_cpu, int16_t *array_gpu)
+void verify_result_quantif(int16_t *array_cpu, int16_t *array_gpu)
 {
     for (int i = 0; i < 64; ++i) {
         assert(array_cpu[i] == array_gpu[i]);
@@ -121,6 +121,6 @@ void quantify(int16_t *array, bool luminance)
     quantify_gpu(array, luminance);
     //printf("Quantify_gpu fait\n");
 
-    //verify_result(array, array_copy);
+    //verify_result_quantif(array, array_copy);
     //printf("Check result fait\n");
 }

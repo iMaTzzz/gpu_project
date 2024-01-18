@@ -286,7 +286,7 @@ void cpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
   }
 }
 
-void verify_result(int16_t mcu_array[64], int16_t mcu_array_copy[64])
+void verify_result_dct(int16_t mcu_array[64], int16_t mcu_array_copy[64])
 {
   for (uint8_t i = 0; i < 64; i++)
     assert(mcu_array[i] == mcu_array_copy[i]);
@@ -311,6 +311,6 @@ void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
   // gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
   // std::cout << "--- after gpu_dct_loeffler --- " << std::endl;
 
-  // verify_result(mcu_array, mcu_array_copy);
-  // std::cout << "--- after verify_result --- " << std::endl;
+  // verify_result_dct(mcu_array, mcu_array_copy);
+  // std::cout << "--- after verify_result_dct --- " << std::endl;
 }
