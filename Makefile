@@ -29,7 +29,12 @@ ppm2jpeg: $(OBJ_FILES) $(OBJ_PROF_FILES)
 obj/%.o: src/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
+# Ajout de la règle pour la compilation en mode debug avec -pg
+debug: CFLAGS += -g -pg
+debug: LDFLAGS += -pg
+debug: clean ppm2jpeg
+
 .PHONY: clean
 
 clean:
-	rm -rf ppm2jpeg $(OBJ_FILES)
+	rm -rf ppm2jpeg $(OBJ_FILES) gmon.out

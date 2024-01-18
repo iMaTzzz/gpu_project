@@ -237,173 +237,173 @@ void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
     }
 }
 
-// void dct_arai(uint8_t **bloc_spatiale, int16_t **bloc_freq)
-// {
-//     int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
-//     int32_t tab_tmp[8][8];
-//     for (uint8_t row = 0; row < 8; row++) {
-//         tmp0 = (int32_t) (bloc_spatiale[row][0] + bloc_spatiale[row][7] + 256);
-//         tmp1 = (int32_t) (bloc_spatiale[row][1] + bloc_spatiale[row][6] + 256);
-//         tmp2 = (int32_t) (bloc_spatiale[row][2] + bloc_spatiale[row][5] + 256);
-//         tmp3 = (int32_t) (bloc_spatiale[row][3] + bloc_spatiale[row][4] + 256);
-//         tmp4 = (int32_t) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
-//         tmp5 = (int32_t) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
-//         tmp6 = (int32_t) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
-//         tmp7 = (int32_t) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
+void dct_arai(uint8_t **bloc_spatiale, int16_t *mcu_array)
+{
+    int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+    int32_t tab_tmp[8][8];
+    for (uint8_t row = 0; row < 8; row++) {
+        tmp0 = (int32_t) (bloc_spatiale[row][0] + bloc_spatiale[row][7] - 256);
+        tmp1 = (int32_t) (bloc_spatiale[row][1] + bloc_spatiale[row][6] - 256);
+        tmp2 = (int32_t) (bloc_spatiale[row][2] + bloc_spatiale[row][5] - 256);
+        tmp3 = (int32_t) (bloc_spatiale[row][3] + bloc_spatiale[row][4] - 256);
+        tmp4 = (int32_t) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
+        tmp5 = (int32_t) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
+        tmp6 = (int32_t) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
+        tmp7 = (int32_t) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
 
-//         tmp8 = tmp0 + tmp3;
-//         tmp9 = tmp1 + tmp2;
-//         tmp10 = tmp1 - tmp2;
-//         tmp11 = tmp0 - tmp3;
+        tmp8 = tmp0 + tmp3;
+        tmp9 = tmp1 + tmp2;
+        tmp10 = tmp1 - tmp2;
+        tmp11 = tmp0 - tmp3;
 
-//         tab_tmp[row][0] = tmp8 + tmp9;
-//         tab_tmp[row][4] = tmp8 - tmp9;
+        tab_tmp[row][0] = tmp8 + tmp9;
+        tab_tmp[row][4] = tmp8 - tmp9;
 
-//         tmp12 = (tmp10 + tmp11) * VALUE_0_707106781;
-//         tab_tmp[row][2] = tmp11 + tmp12;
-//         tab_tmp[row][6] = tmp11 - tmp12;
+        tmp12 = (tmp10 + tmp11) * VALUE_0_707106781;
+        tab_tmp[row][2] = tmp11 + tmp12;
+        tab_tmp[row][6] = tmp11 - tmp12;
 
-//         tmp8 = tmp4 + tmp5;
-//         tmp9 = tmp5 + tmp6;
-//         tmp10 = tmp6 + tmp7;
+        tmp8 = tmp4 + tmp5;
+        tmp9 = tmp5 + tmp6;
+        tmp10 = tmp6 + tmp7;
 
-//         tmp13 = (tmp8 - tmp10) * VALUE_0_382683433;
-//         tmp14 = tmp8 * VALUE_0_541196100 + tmp13;
-//         tmp15 = tmp10 * VALUE_1_306562965 + tmp13;
-//         tmp16 = tmp9 * VALUE_0_707106781;
+        tmp13 = (tmp8 - tmp10) * VALUE_0_382683433;
+        tmp14 = tmp8 * VALUE_0_541196100 + tmp13;
+        tmp15 = tmp10 * VALUE_1_306562965 + tmp13;
+        tmp16 = tmp9 * VALUE_0_707106781;
 
-//         tmp17 = tmp7 + tmp16;
-//         tmp18 = tmp7 - tmp16;
+        tmp17 = tmp7 + tmp16;
+        tmp18 = tmp7 - tmp16;
         
-//         tab_tmp[row][1] = tmp17 + tmp15;
-//         tab_tmp[row][3] = tmp18 - tmp14;
-//         tab_tmp[row][5] = tmp18 + tmp14;
-//         tab_tmp[row][7] = tmp17 - tmp15;
-//     }
-//     for (uint8_t column = 0; column < 8; column++) {
-//         tmp0 = tab_tmp[0][column] + tab_tmp[7][column];
-//         tmp1 = tab_tmp[1][column] + tab_tmp[6][column];
-//         tmp2 = tab_tmp[2][column] + tab_tmp[5][column];
-//         tmp3 = tab_tmp[3][column] + tab_tmp[4][column];
-//         tmp4 = tab_tmp[3][column] - tab_tmp[4][column];
-//         tmp5 = tab_tmp[2][column] - tab_tmp[5][column];
-//         tmp6 = tab_tmp[1][column] - tab_tmp[6][column];
-//         tmp7 = tab_tmp[0][column] - tab_tmp[7][column];
+        tab_tmp[row][1] = tmp17 + tmp15;
+        tab_tmp[row][3] = tmp18 - tmp14;
+        tab_tmp[row][5] = tmp18 + tmp14;
+        tab_tmp[row][7] = tmp17 - tmp15;
+    }
+    for (uint8_t column = 0; column < 8; column++) {
+        tmp0 = tab_tmp[0][column] + tab_tmp[7][column];
+        tmp1 = tab_tmp[1][column] + tab_tmp[6][column];
+        tmp2 = tab_tmp[2][column] + tab_tmp[5][column];
+        tmp3 = tab_tmp[3][column] + tab_tmp[4][column];
+        tmp4 = tab_tmp[3][column] - tab_tmp[4][column];
+        tmp5 = tab_tmp[2][column] - tab_tmp[5][column];
+        tmp6 = tab_tmp[1][column] - tab_tmp[6][column];
+        tmp7 = tab_tmp[0][column] - tab_tmp[7][column];
 
-//         tmp8 = tmp0 + tmp3;
-//         tmp9 = tmp1 + tmp2;
-//         tmp10 = tmp1 - tmp2;
-//         tmp11 = tmp0 - tmp3;
+        tmp8 = tmp0 + tmp3;
+        tmp9 = tmp1 + tmp2;
+        tmp10 = tmp1 - tmp2;
+        tmp11 = tmp0 - tmp3;
 
-//         bloc_freq[0][column] = ((int16_t) (tmp8 + tmp9) >> 3);
-//         bloc_freq[4][column] = ((int16_t) (tmp8 - tmp9) >> 3);
+        mcu_array[matrix_zig_zag[0][column]] = ((int16_t) (tmp8 + tmp9) >> 3);
+        mcu_array[matrix_zig_zag[4][column]] = ((int16_t) (tmp8 - tmp9) >> 3);
 
-//         tmp12 = (tmp10 + tmp11) * VALUE_0_707106781;
-//         bloc_freq[2][column] = tmp11 + tmp12;
-//         bloc_freq[6][column] = tmp11 - tmp12;
+        tmp12 = (tmp10 + tmp11) * VALUE_0_707106781;
+        mcu_array[matrix_zig_zag[2][column]] = tmp11 + tmp12;
+        mcu_array[matrix_zig_zag[6][column]] = tmp11 - tmp12;
 
-//         tmp8 = tmp4 + tmp5;
-//         tmp9 = tmp5 + tmp6;
-//         tmp10 = tmp6 + tmp7;
+        tmp8 = tmp4 + tmp5;
+        tmp9 = tmp5 + tmp6;
+        tmp10 = tmp6 + tmp7;
 
-//         tmp13 = (tmp8 - tmp10) * VALUE_0_382683433;
-//         tmp14 = tmp8 * VALUE_0_541196100 + tmp13;
-//         tmp15 = tmp10 * VALUE_1_306562965 + tmp13;
-//         tmp16 = tmp9 * VALUE_0_707106781;
+        tmp13 = (tmp8 - tmp10) * VALUE_0_382683433;
+        tmp14 = tmp8 * VALUE_0_541196100 + tmp13;
+        tmp15 = tmp10 * VALUE_1_306562965 + tmp13;
+        tmp16 = tmp9 * VALUE_0_707106781;
 
-//         tmp17 = tmp7 + tmp16;
-//         tmp18 = tmp7 - tmp16;
+        tmp17 = tmp7 + tmp16;
+        tmp18 = tmp7 - tmp16;
         
-//         bloc_freq[1][column] = ((int16_t) (tmp17 + tmp15) >> 3);
-//         bloc_freq[3][column] = ((int16_t) (tmp18 - tmp14) >> 3);
-//         bloc_freq[5][column] = ((int16_t) (tmp18 + tmp14) >> 3);
-//         bloc_freq[7][column] = ((int16_t) (tmp17 - tmp15) >> 3);
-//     }
-// }
+        mcu_array[matrix_zig_zag[1][column]] = ((int16_t) (tmp17 + tmp15) >> 3);
+        mcu_array[matrix_zig_zag[3][column]] = ((int16_t) (tmp18 - tmp14) >> 3);
+        mcu_array[matrix_zig_zag[5][column]] = ((int16_t) (tmp18 + tmp14) >> 3);
+        mcu_array[matrix_zig_zag[7][column]] = ((int16_t) (tmp17 - tmp15) >> 3);
+    }
+}
 
-// void dct_arai_bis(uint8_t **bloc_spatiale, int16_t **bloc_freq)
-// {
-//     double tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
-//     double tab_tmp[8][8];
-//     for (uint8_t row = 0; row < 8; row++) {
-//         tmp0 = (double) (bloc_spatiale[row][0] + bloc_spatiale[row][7] + 256);
-//         tmp1 = (double) (bloc_spatiale[row][1] + bloc_spatiale[row][6] + 256);
-//         tmp2 = (double) (bloc_spatiale[row][2] + bloc_spatiale[row][5] + 256);
-//         tmp3 = (double) (bloc_spatiale[row][3] + bloc_spatiale[row][4] + 256);
-//         tmp4 = (double) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
-//         tmp5 = (double) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
-//         tmp6 = (double) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
-//         tmp7 = (double) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
+void dct_arai_bis(uint8_t **bloc_spatiale, int16_t *mcu_array)
+{
+    double tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+    double tab_tmp[8][8];
+    for (uint8_t row = 0; row < 8; row++) {
+        tmp0 = (double) (bloc_spatiale[row][0] + bloc_spatiale[row][7] - 256);
+        tmp1 = (double) (bloc_spatiale[row][1] + bloc_spatiale[row][6] - 256);
+        tmp2 = (double) (bloc_spatiale[row][2] + bloc_spatiale[row][5] - 256);
+        tmp3 = (double) (bloc_spatiale[row][3] + bloc_spatiale[row][4] - 256);
+        tmp4 = (double) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
+        tmp5 = (double) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
+        tmp6 = (double) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
+        tmp7 = (double) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
 
-//         tmp8 = tmp0 + tmp3;
-//         tmp9 = tmp1 + tmp2;
-//         tmp10 = tmp1 - tmp2;
-//         tmp11 = tmp0 - tmp3;
+        tmp8 = tmp0 + tmp3;
+        tmp9 = tmp1 + tmp2;
+        tmp10 = tmp1 - tmp2;
+        tmp11 = tmp0 - tmp3;
 
-//         tab_tmp[row][0] = tmp8 + tmp9;
-//         tab_tmp[row][4] = tmp8 - tmp9;
+        tab_tmp[row][0] = tmp8 + tmp9;
+        tab_tmp[row][4] = tmp8 - tmp9;
 
-//         tmp12 = (tmp10 + tmp11) * ((double) VALUE_0_707106781);
-//         tab_tmp[row][2] = tmp11 + tmp12;
-//         tab_tmp[row][6] = tmp11 - tmp12;
+        tmp12 = (tmp10 + tmp11) * ((double) VALUE_0_707106781);
+        tab_tmp[row][2] = tmp11 + tmp12;
+        tab_tmp[row][6] = tmp11 - tmp12;
 
-//         tmp8 = tmp4 + tmp5;
-//         tmp9 = tmp5 + tmp6;
-//         tmp10 = tmp6 + tmp7;
+        tmp8 = tmp4 + tmp5;
+        tmp9 = tmp5 + tmp6;
+        tmp10 = tmp6 + tmp7;
 
-//         tmp13 = (tmp8 - tmp10) * ((double) VALUE_0_382683433);
-//         tmp14 = tmp8 * ((double) VALUE_0_541196100) + tmp13;
-//         tmp15 = tmp10 * ((double) VALUE_1_306562965) + tmp13;
-//         tmp16 = tmp9 * ((double) VALUE_0_707106781);
+        tmp13 = (tmp8 - tmp10) * ((double) VALUE_0_382683433);
+        tmp14 = tmp8 * ((double) VALUE_0_541196100) + tmp13;
+        tmp15 = tmp10 * ((double) VALUE_1_306562965) + tmp13;
+        tmp16 = tmp9 * ((double) VALUE_0_707106781);
 
-//         tmp17 = tmp7 + tmp16;
-//         tmp18 = tmp7 - tmp16;
+        tmp17 = tmp7 + tmp16;
+        tmp18 = tmp7 - tmp16;
         
-//         tab_tmp[row][1] = tmp17 + tmp15;
-//         tab_tmp[row][3] = tmp18 - tmp14;
-//         tab_tmp[row][5] = tmp18 + tmp14;
-//         tab_tmp[row][7] = tmp17 - tmp15;
-//     }
-//     for (uint8_t column = 0; column < 8; column++) {
-//         tmp0 = tab_tmp[0][column] + tab_tmp[7][column];
-//         tmp1 = tab_tmp[1][column] + tab_tmp[6][column];
-//         tmp2 = tab_tmp[2][column] + tab_tmp[5][column];
-//         tmp3 = tab_tmp[3][column] + tab_tmp[4][column];
-//         tmp4 = tab_tmp[3][column] - tab_tmp[4][column];
-//         tmp5 = tab_tmp[2][column] - tab_tmp[5][column];
-//         tmp6 = tab_tmp[1][column] - tab_tmp[6][column];
-//         tmp7 = tab_tmp[0][column] - tab_tmp[7][column];
+        tab_tmp[row][1] = tmp17 + tmp15;
+        tab_tmp[row][3] = tmp18 - tmp14;
+        tab_tmp[row][5] = tmp18 + tmp14;
+        tab_tmp[row][7] = tmp17 - tmp15;
+    }
+    for (uint8_t column = 0; column < 8; column++) {
+        tmp0 = tab_tmp[0][column] + tab_tmp[7][column];
+        tmp1 = tab_tmp[1][column] + tab_tmp[6][column];
+        tmp2 = tab_tmp[2][column] + tab_tmp[5][column];
+        tmp3 = tab_tmp[3][column] + tab_tmp[4][column];
+        tmp4 = tab_tmp[3][column] - tab_tmp[4][column];
+        tmp5 = tab_tmp[2][column] - tab_tmp[5][column];
+        tmp6 = tab_tmp[1][column] - tab_tmp[6][column];
+        tmp7 = tab_tmp[0][column] - tab_tmp[7][column];
 
-//         tmp8 = tmp0 + tmp3;
-//         tmp9 = tmp1 + tmp2;
-//         tmp10 = tmp1 - tmp2;
-//         tmp11 = tmp0 - tmp3;
+        tmp8 = tmp0 + tmp3;
+        tmp9 = tmp1 + tmp2;
+        tmp10 = tmp1 - tmp2;
+        tmp11 = tmp0 - tmp3;
 
-//         bloc_freq[0][column] = ((int16_t) (tmp8 + tmp9) >> 3);
-//         bloc_freq[4][column] = ((int16_t) (tmp8 - tmp9) >> 3);
+        mcu_array[matrix_zig_zag[0][column]] = ((int16_t) (tmp8 + tmp9) >> 3);
+        mcu_array[matrix_zig_zag[4][column]] = ((int16_t) (tmp8 - tmp9) >> 3);
 
-//         tmp12 = (tmp10 + tmp11) * ((double) VALUE_0_707106781);
-//         bloc_freq[2][column] = tmp11 + tmp12;
-//         bloc_freq[6][column] = tmp11 - tmp12;
+        tmp12 = (tmp10 + tmp11) * ((double) VALUE_0_707106781);
+        mcu_array[matrix_zig_zag[2][column]] = tmp11 + tmp12;
+        mcu_array[matrix_zig_zag[6][column]] = tmp11 - tmp12;
 
-//         tmp8 = tmp4 + tmp5;
-//         tmp9 = tmp5 + tmp6;
-//         tmp10 = tmp6 + tmp7;
+        tmp8 = tmp4 + tmp5;
+        tmp9 = tmp5 + tmp6;
+        tmp10 = tmp6 + tmp7;
 
-//         tmp13 = (tmp8 - tmp10) * ((double) VALUE_0_382683433);
-//         tmp14 = tmp8 * ((double) VALUE_0_541196100) + tmp13;
-//         tmp15 = tmp10 * ((double) VALUE_1_306562965) + tmp13;
-//         tmp16 = tmp9 * ((double) VALUE_0_707106781);
+        tmp13 = (tmp8 - tmp10) * ((double) VALUE_0_382683433);
+        tmp14 = tmp8 * ((double) VALUE_0_541196100) + tmp13;
+        tmp15 = tmp10 * ((double) VALUE_1_306562965) + tmp13;
+        tmp16 = tmp9 * ((double) VALUE_0_707106781);
 
-//         tmp17 = tmp7 + tmp16;
-//         tmp18 = tmp7 - tmp16;
+        tmp17 = tmp7 + tmp16;
+        tmp18 = tmp7 - tmp16;
         
-//         bloc_freq[1][column] = ((int16_t) (tmp17 + tmp15) >> 3);
-//         bloc_freq[3][column] = ((int16_t) (tmp18 - tmp14) >> 3);
-//         bloc_freq[5][column] = ((int16_t) (tmp18 + tmp14) >> 3);
-//         bloc_freq[7][column] = ((int16_t) (tmp17 - tmp15) >> 3);
-//     }
-// }
+        mcu_array[matrix_zig_zag[1][column]] = ((int16_t) (tmp17 + tmp15) >> 3);
+        mcu_array[matrix_zig_zag[3][column]] = ((int16_t) (tmp18 - tmp14) >> 3);
+        mcu_array[matrix_zig_zag[5][column]] = ((int16_t) (tmp18 + tmp14) >> 3);
+        mcu_array[matrix_zig_zag[7][column]] = ((int16_t) (tmp17 - tmp15) >> 3);
+    }
+}
 
 
 // void dct_loeffler_float_point(uint8_t **bloc_spatiale, int16_t **bloc_freq)
@@ -524,346 +524,3 @@ void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
 //         bloc_freq[7][column] = (int16_t) (tmp3 >> 15);
 //     }
 // }
-
-
-// void dct_loeffler_1D_stage1(int16_t x0, int16_t x1, int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6, int16_t x7, uint8_t ID, int16_t **bloc_freq, bool verif)
-// {
-//     if (verif) {
-//         bloc_freq[ID][0] = x0 + x7;
-//         bloc_freq[ID][1] = x1 + x6;
-//         bloc_freq[ID][2] = x2 + x5;
-//         bloc_freq[ID][3] = x3 + x4;
-//         bloc_freq[ID][4] = x3 - x4;
-//         bloc_freq[ID][5] = x2 - x5;
-//         bloc_freq[ID][6] = x1 - x6;
-//         bloc_freq[ID][7] = x0 - x7;
-//     } else {
-//         bloc_freq[0][ID] = x0 + x7;
-//         bloc_freq[1][ID] = x1 + x6;
-//         bloc_freq[2][ID] = x2 + x5;
-//         bloc_freq[3][ID] = x3 + x4;
-//         bloc_freq[4][ID] = x3 - x4;
-//         bloc_freq[5][ID] = x2 - x5;
-//         bloc_freq[6][ID] = x1 - x6;
-//         bloc_freq[7][ID] = x0 - x7;
-//     }
-// }
-
-// void dct_loeffler_1D_stage2(int16_t x0, int16_t x1, int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6, int16_t x7, uint8_t ID, int16_t **bloc_freq, bool verif)
-// {
-//     if (verif) {
-//         bloc_freq[ID][0] = x0 + x3;
-//         bloc_freq[ID][1] = x1 + x2;
-//         bloc_freq[ID][2] = x1 - x2;
-//         bloc_freq[ID][3] = x0 - x3;
-//         bloc_freq[ID][4] = (int16_t) (x4*c3 + x7*s3);
-//         bloc_freq[ID][5] = (int16_t) (x5*c1 + x6*s1);
-//         bloc_freq[ID][6] = (int16_t) (x6*c1 - x5*s1);
-//         bloc_freq[ID][7] = (int16_t) (x7*c3 - x4*s3);
-//     } else {
-//         bloc_freq[0][ID] = x0 + x3;
-//         bloc_freq[1][ID] = x1 + x2;
-//         bloc_freq[2][ID] = x1 - x2;
-//         bloc_freq[3][ID] = x0 - x3;
-//         bloc_freq[4][ID] = (int16_t) (x4*c3 + x7*s3);
-//         bloc_freq[5][ID] = (int16_t) (x5*c1 + x6*s1);
-//         bloc_freq[6][ID] = (int16_t) (x6*c1 - x5*s1);
-//         bloc_freq[7][ID] = (int16_t) (x7*c3 - x4*s3);
-//     }
-// }
-
-// void dct_loeffler_1D_stage3(int16_t x0, int16_t x1, int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6, int16_t x7, uint8_t ID, int16_t **bloc_freq, bool verif)
-// {
-//     if (verif) {
-//         bloc_freq[ID][0] = x0 + x1;
-//         bloc_freq[ID][1] = x0 - x1;
-//         bloc_freq[ID][2] = ((int16_t) sqrt2 * (x2*c6 + x3*s6));
-//         bloc_freq[ID][3] = ((int16_t) sqrt2 * (x3*c6 - x2*s6));
-//         bloc_freq[ID][4] = x4 + x6;
-//         bloc_freq[ID][5] = x7 - x5;
-//         bloc_freq[ID][6] = x4 - x6;
-//         bloc_freq[ID][7] = x7 + x5;
-//     } else {
-//         bloc_freq[0][ID] = x0 + x1;
-//         bloc_freq[1][ID] = x0 - x1;
-//         bloc_freq[2][ID] = ((int16_t) sqrt2 * (x2*c6 + x3*s6));
-//         bloc_freq[3][ID] = ((int16_t) sqrt2 * (x3*c6 - x2*s6));
-//         bloc_freq[4][ID] = x4 + x6;
-//         bloc_freq[5][ID] = x7 - x5;
-//         bloc_freq[6][ID] = x4 - x6;
-//         bloc_freq[7][ID] = x7 + x5;
-//     }
-// }
-
-// void dct_loeffler_1D_stage4(int16_t x0, int16_t x1, int16_t x2, int16_t x3, int16_t x4, int16_t x5, int16_t x6, int16_t x7, uint8_t ID, int16_t **bloc_freq, bool verif)
-// {
-//     // if (verif) {
-//     //     bloc_freq[ID][0] = (int16_t) (x0 * sqrt2) >> 2;
-//     //     bloc_freq[ID][1] = (int16_t) ((x7 + x4) * sqrt2) >> 2;
-//     //     bloc_freq[ID][2] = (int16_t) (x2 * sqrt2) >> 2;
-//     //     bloc_freq[ID][3] = x6 >> 1;  //(sqrt2 * sqrt2 * x6) >> 2
-//     //     bloc_freq[ID][4] = (int16_t) (x1 * sqrt2) >> 2;
-//     //     bloc_freq[ID][5] = x5 >> 1; //(sqrt2 * sqrt2 * x5) >> 2
-//     //     bloc_freq[ID][6] = (int16_t) (x3 * sqrt2) >> 2; 
-//     //     bloc_freq[ID][7] = (int16_t) ((x7 - x4) * sqrt2) >> 2;
-//     // } else {
-//     //     bloc_freq[0][ID] = (int16_t) (x0 * sqrt2) >> 2;
-//     //     bloc_freq[1][ID] = (int16_t) ((x7 + x4) * sqrt2) >> 2;
-//     //     bloc_freq[2][ID] = (int16_t) (x2 * sqrt2) >> 2;
-//     //     bloc_freq[3][ID] = x6 >> 1;  //(sqrt2 * sqrt2 * x6) >> 2
-//     //     bloc_freq[4][ID] = (int16_t) (x1 * sqrt2) >> 2;
-//     //     bloc_freq[5][ID] = x5 >> 1; //(sqrt2 * sqrt2 * x5) >> 2
-//     //     bloc_freq[6][ID] = (int16_t) (x3 * sqrt2) >> 2; 
-//     //     bloc_freq[7][ID] = (int16_t) ((x7 - x4) * sqrt2) >> 2;
-//     // }
-//     if (verif) {
-//         bloc_freq[0][ID] = x0;
-//         bloc_freq[1][ID] = x7 + x4;
-//         bloc_freq[2][ID] = x2;
-//         bloc_freq[3][ID] = x6*sqrt2;
-//         bloc_freq[4][ID] = x1;
-//         bloc_freq[5][ID] = x5*sqrt2;
-//         bloc_freq[6][ID] = x3; 
-//         bloc_freq[7][ID] = x7 - x4;
-//     } else {
-//         bloc_freq[ID][0] = x0 >> 3;
-//         bloc_freq[ID][1] = (x7 + x4) >> 3;
-//         bloc_freq[ID][2] = x2 >> 3;
-//         bloc_freq[ID][3] = (int16_t) (x6 *sqrt2) >> 3;
-//         bloc_freq[ID][4] = x1 >> 3;
-//         bloc_freq[ID][5] = (int16_t) (x5 *sqrt2) >> 3;
-//         bloc_freq[ID][6] = x3 >> 3;
-//         bloc_freq[ID][7] = (x7 - x4) >> 3;
-//     }
-// }
-
-// static void transform_to_dct_1D_row(int16_t **bloc_freq)
-// {
-//     bool verif = 1;
-//     omp_set_num_threads(8);
-//     #pragma omp parallel
-//     {
-//         int ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[ID][0];
-//         int16_t x1_tmp = bloc_freq[ID][1];
-//         int16_t x2_tmp = bloc_freq[ID][2];
-//         int16_t x3_tmp = bloc_freq[ID][3];
-//         int16_t x4_tmp = bloc_freq[ID][4];
-//         int16_t x5_tmp = bloc_freq[ID][5];
-//         int16_t x6_tmp = bloc_freq[ID][6];
-//         int16_t x7_tmp = bloc_freq[ID][7];
-//         dct_loeffler_1D_stage1(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after row step 1\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[ID][0];
-//         int16_t x1_tmp = bloc_freq[ID][1];
-//         int16_t x2_tmp = bloc_freq[ID][2];
-//         int16_t x3_tmp = bloc_freq[ID][3];
-//         int16_t x4_tmp = bloc_freq[ID][4];
-//         int16_t x5_tmp = bloc_freq[ID][5];
-//         int16_t x6_tmp = bloc_freq[ID][6];
-//         int16_t x7_tmp = bloc_freq[ID][7];
-//         dct_loeffler_1D_stage2(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after row step 2\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel 
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[ID][0];
-//         int16_t x1_tmp = bloc_freq[ID][1];
-//         int16_t x2_tmp = bloc_freq[ID][2];
-//         int16_t x3_tmp = bloc_freq[ID][3];
-//         int16_t x4_tmp = bloc_freq[ID][4];
-//         int16_t x5_tmp = bloc_freq[ID][5];
-//         int16_t x6_tmp = bloc_freq[ID][6];
-//         int16_t x7_tmp = bloc_freq[ID][7];
-//         dct_loeffler_1D_stage3(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after row step 3\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[ID][0];
-//         int16_t x1_tmp = bloc_freq[ID][1];
-//         int16_t x2_tmp = bloc_freq[ID][2];
-//         int16_t x3_tmp = bloc_freq[ID][3];
-//         int16_t x4_tmp = bloc_freq[ID][4];
-//         int16_t x5_tmp = bloc_freq[ID][5];
-//         int16_t x6_tmp = bloc_freq[ID][6];
-//         int16_t x7_tmp = bloc_freq[ID][7];
-//         dct_loeffler_1D_stage4(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-// }
-
-// static void transform_to_dct_1D_column(int16_t **bloc_freq)
-// {
-//     bool verif = 0;
-//     omp_set_num_threads(8);
-//     #pragma omp parallel
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[0][ID];
-//         int16_t x1_tmp = bloc_freq[1][ID];
-//         int16_t x2_tmp = bloc_freq[2][ID];
-//         int16_t x3_tmp = bloc_freq[3][ID];
-//         int16_t x4_tmp = bloc_freq[4][ID];
-//         int16_t x5_tmp = bloc_freq[5][ID];
-//         int16_t x6_tmp = bloc_freq[6][ID];
-//         int16_t x7_tmp = bloc_freq[7][ID];
-//         // printf("x0_tmp = %hi, row = %hhu\n", x0_tmp, ID);
-//         dct_loeffler_1D_stage1(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after column step 1\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel 
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[0][ID];
-//         int16_t x1_tmp = bloc_freq[1][ID];
-//         int16_t x2_tmp = bloc_freq[2][ID];
-//         int16_t x3_tmp = bloc_freq[3][ID];
-//         int16_t x4_tmp = bloc_freq[4][ID];
-//         int16_t x5_tmp = bloc_freq[5][ID];
-//         int16_t x6_tmp = bloc_freq[6][ID];
-//         int16_t x7_tmp = bloc_freq[7][ID];
-//         dct_loeffler_1D_stage2(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after row step 2\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel 
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[0][ID];
-//         int16_t x1_tmp = bloc_freq[1][ID];
-//         int16_t x2_tmp = bloc_freq[2][ID];
-//         int16_t x3_tmp = bloc_freq[3][ID];
-//         int16_t x4_tmp = bloc_freq[4][ID];
-//         int16_t x5_tmp = bloc_freq[5][ID];
-//         int16_t x6_tmp = bloc_freq[6][ID];
-//         int16_t x7_tmp = bloc_freq[7][ID];
-//         dct_loeffler_1D_stage3(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-
-//     // printf("Printing matrix after column step 3\n");
-//     // for (int i = 0 ; i < 8; i++) {
-//     //     for (int j = 0 ; j < 8; j++) {
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-
-//     #pragma omp parallel 
-//     {
-//         uint8_t ID = omp_get_thread_num();
-//         int16_t x0_tmp = bloc_freq[0][ID];
-//         int16_t x1_tmp = bloc_freq[1][ID];
-//         int16_t x2_tmp = bloc_freq[2][ID];
-//         int16_t x3_tmp = bloc_freq[3][ID];
-//         int16_t x4_tmp = bloc_freq[4][ID];
-//         int16_t x5_tmp = bloc_freq[5][ID];
-//         int16_t x6_tmp = bloc_freq[6][ID];
-//         int16_t x7_tmp = bloc_freq[7][ID];
-//         // printf("x0_tmp = %hi, row = %hhu\n", x0_tmp, ID); s
-//         dct_loeffler_1D_stage4(x0_tmp, x1_tmp, x2_tmp, x3_tmp, x4_tmp, x5_tmp, x6_tmp, x7_tmp, ID, bloc_freq, verif);
-//     }
-// }
-
-// void transform_to_dct_loeffler(uint8_t **bloc_spatiale, int16_t **bloc_freq)
-// {
-//     // for (int i = 0; i < 8; i++) {
-//     //     for (int j = 0; j < 8; j++) {
-//     //         // hx = half word (2octets)
-//     //         printf("%hhu\t", bloc_spatiale[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-//     // printf("Issou\n");
-//     for (int i = 0 ; i < 8; i++) {
-//         for (int j = 0 ; j < 8; j++) {
-//             bloc_freq[i][j] = ((int16_t) bloc_spatiale[i][j]) - 128;
-//             // printf("%hi\t", bloc_freq[i][j]);
-//         }
-//         // printf("\n");
-//     }
-
-//     transform_to_dct_1D();
-
-    
-//     // transform_to_dct_1D_row(bloc_freq);
-//     // printf("Printing matrix after row step 4\n");
-//     // for (int i = 0; i < 8; i++) {
-//     //     for (int j = 0; j < 8; j++) {
-//     //         // hx = half word (2octets)
-//     //         // printf("%04hx\t", bloc_freq[i][j]);
-//     //         printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-//     // transform_to_dct_1D_column(bloc_freq);
-
-//     // printf("Printing matrix after column step 4\n");
-//     // for (int i = 0; i < 8; i++) {
-//     //     for (int j = 0; j < 8; j++) {
-//     //         // hx = half word (2octets)
-//     //         printf("%04hx\t", bloc_freq[i][j]);
-//     //         // printf("%hi\t", bloc_freq[i][j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-// }
-
-
-//     // print to test
-//     // printf("Printing matrix after dct : \n");
-//     // for (int i = 0; i < 8; i++) {
-//     //     for (int j = 0; j < 8; j++) {
-//     //         // hx = half word (2octets)
-//     //         printf("%04hx\t", bloc_freq[i][j] );
-//     //     }
-//     //     printf("\n");
-//     // }
-//     //printf("size : %li = %li\n",sizeof((int8_t)bloc_spatiale[0][2]), sizeof(int8_t));
-//     //printf("size : %li = %li\n",sizeof(bloc_freq[0][2]), sizeof(int16_t));
-
-//     // return bloc_freq;

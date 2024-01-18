@@ -335,7 +335,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         }
                     }
                     dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_faster_loeffler(bloc, bloc_array);
+                    //dct_arai(bloc, bloc_array);
+                    //dct_arai_bis(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -361,7 +363,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     }
                     //print_matrix_8(mcu_Cb);
                     dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_faster_loeffler(bloc, bloc_array);
+                    //dct_arai(bloc, bloc_array);
+                    //dct_arai_bis(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -388,7 +392,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     }
                     //print_matrix_8(mcu_Cb);
                     dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_faster_loeffler(bloc, bloc_array);
+                    //dct_arai(bloc, bloc_array);
+                    //dct_arai_bis(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
