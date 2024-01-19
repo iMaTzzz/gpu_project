@@ -10,21 +10,45 @@
 #include "bitstream.h"
 
 /* Cette fonction alloue une matrice de la taille de MCU/bloc voulue */
-static uint8_t **alloc_mcu(uint8_t width, uint8_t heigth)
+static uint8_t ***alloc_mcus_line_matrix(uint32_t nb_mcu_line, uint8_t width, uint8_t heigth)
 {
-    uint8_t **mcu = malloc(heigth * sizeof(uint8_t *));
-    for (int row = 0; row < heigth; row++) {
-        mcu[row] = malloc(width * sizeof(uint8_t));
+    uint8_t ***mcus_line = malloc(nb_mcu_line * sizeof(uint8_t **));
+    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
+        mcus_line[mcu] = malloc(heigth * sizeof(uint8_t *));
+        for (uint8_t row = 0; row < heigth; ++row) {
+            mcus_line[mcu][row] = malloc(width * sizeof(uint8_t));
+        }
     }
-    return mcu;
+    return mcus_line;
 }
 
 /* Cette fonction libère l'espace alloué par un bloc ou une MCU. */
-static void free_mcu(uint8_t **mcu, uint8_t heigth) {
-    for (int row = 0; row < heigth; row++) {
-        free(mcu[row]);
+static void free_mcus_line_matrix(uint8_t ***mcus_line_matrix, uint32_t nb_mcu_line, uint8_t heigth)
+{
+    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
+        for (uint8_t row = 0; row < heigth; ++row) {
+            free(mcus_line_matrix[mcu][row]);
+        }
+        free(mcus_line_matrix[mcu]);
     }
-    free(mcu);
+    free(mcus_line_matrix);
+}
+
+static int16_t **alloc_mcus_line_array(uint32_t nb_mcu_line, uint8_t width, uint8_t heigth)
+{
+    int16_t **mcus_line_array = malloc(nb_mcu_line * sizeof(int16_t *));
+    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
+        mcus_line_array[mcu] = malloc(width*heigth*sizeof(int16_t));
+    }
+    return mcus_line_array;
+}
+
+static void free_mcus_line_array(int16_t **mcus_line_array, uint32_t nb_mcu_line)
+{
+    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
+        free(mcus_line_array[mcu]);
+    }
+    free(mcus_line_array);
 }
 
 /*
@@ -32,36 +56,51 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante. 
 */
+extern "C"
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     /* On alloue tous les espaces mémoire nécessaires. */
+    // TODO
     uint16_t *index = malloc(sizeof(uint16_t));
-    uint8_t **mcu = alloc_mcu(8, 8);
+    // Idée faire une passe pour récupérer les predicateurs
     int16_t *predicator = calloc(1, sizeof(int16_t));
-    int16_t *mcu_array = malloc(64 * sizeof(int16_t));
-    uint32_t line_mcu = height / 8; // Nombre de lignes de MCUs.
-    uint32_t column_mcu = width / 8; // Nombre de colonnes de MCUs.
-    bool tronc_line = 0; // Indique si il y a une troncature en bas. 
-    bool tronc_column = 0; // Indique si il y a une troncature à droite.
+
+    uint32_t nb_mcu_column = height / 8; // Nombre de MCUs par colonne
+    uint32_t nb_mcu_line = width / 8; // Nombre de MCUs par ligne
     uint8_t height_remainder = height % 8; // Nombre de lignes dépassant (en cas de troncature).
     uint8_t width_remainder = width % 8; // Nombre de colonnes dépassant (en cas de troncature).
+    bool tronc_line = 0; // Indique si il y a une troncature en bas. 
+    bool tronc_column = 0; // Indique si il y a une troncature à droite.
     if (height_remainder != 0) { 
-        line_mcu++; // On rajoute une ligne de MCUs.
-        tronc_line = 1; // Il y a troncature en bas.
+        nb_mcu_column++; // On rajoute une ligne de MCUs.
+        tronc_column = 1; // Il y a troncature en bas.
     }
     if (width_remainder != 0) {
-        column_mcu++; // On rajoute une colonne de MCUs.
-        tronc_column = 1; // Il y a troncature à droite.
+        nb_mcu_line++; // On rajoute une colonne de MCUs.
+        tronc_line = 1; // Il y a troncature à droite.
     }
-    printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
-    printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
+    uint8_t ***mcus_line_matrix = alloc_mcus_line_matrix(nb_mcu_line, 8, 8);
+    int16_t **mcus_line_array = alloc_mcus_line_array(nb_mcu_line, 8, 8);
+
     bool tronc_line_mcu; // Indique si il y a une troncature en bas dans la MCU courante.
     bool tronc_column_mcu; // Indique si il y a une troncature à droite dans la MCU courante.
+
+    // TODO Gerer les troncatures
+    for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
+        for (uint8_t line = 0; line < 8; ++line) {
+            for (uint32_t column = 0; column < width; ++column) {
+                mcus_line_matrix[column/8][line][column%8] = fgetc(image);
+            }
+        }
+        // TODO
+        // Call GPU
+        // Take result from GPU
+        // Call coding from results of GPU
+    }
+
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
-    for (uint32_t i = 0; i < line_mcu; i++) {
-        // printf("i = %i\n", i);
-        for (uint32_t j = 0; j < column_mcu; j++) {
-            // printf("j = %i\n", j);
+    for (uint32_t i = 0; i < nb_mcu_column; i++) {
+        for (uint32_t j = 0; j < nb_mcu_line; j++) {
             if (tronc_line && i == line_mcu - 1) {
                 tronc_line_mcu = 1;
             } else {
@@ -137,8 +176,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         }
     }
     /* On libère tous les espaces mémoire alloués. */
-    free_mcu(mcu, 8);
-    free(mcu_array);
+    free_mcus_line_matrix(mcus_line_matrix, nb_mcu_line, 8);
+    free_mcus_line_array(mcus_line_array, nb_mcu_line);
     free(predicator);
     free(index);
 }
