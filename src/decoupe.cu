@@ -125,7 +125,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     uint16_t mcu_index = column / 8;
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        mcus_line_matrix[mcu_index][line_offset][column_offset] = mcus_line_matrix[mcu_index][height_remainder - 1][column_offset - 1];
+                        mcus_line_matrix[mcu_index][line_offset][column_offset] = mcus_line_matrix[mcu_index][height_remainder - 1][width_remainder - 1];
                     }
                 }
             }
