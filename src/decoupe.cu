@@ -103,7 +103,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     mcus_line_matrix[column/8][line][column%8] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
-                if (tronc_right && (column / 8) == nb_mcu_line - 1) {
+                if (tronc_right) {
                     for (uint8_t offset = column % 8; offset < width_remainder; ++offset) {
                         // On copie la dernière valeur du pixel de la même ligne dans le reste des colonnes
                         mcus_line_matrix[column/8][line][offset] = mcus_line_matrix[column/8][line][(column%8) - 1];
@@ -118,7 +118,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     mcus_line_matrix[column/8][line_offset][column%8] = mcus_line_matrix[column/8][height_remainder - 1][column%8];
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
-                if (tronc_right && (column / 8) == nb_mcu_line - 1) {
+                if (tronc_right) {
                     for (uint8_t column_offset = column % 8; column_offset < width_remainder; ++column_offset) {
                         // On copie la dernière valeur du pixel de la même ligne dans le reste des colonnes
                         mcus_line_matrix[column/8][line_offset][column_offset] = mcus_line_matrix[column/8][height_remainder - 1][(column%8) - 1];
@@ -132,10 +132,10 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     mcus_line_matrix[column/8][line][column%8] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
-                if (tronc_right && (column / 8) == nb_mcu_line - 1) {
-                    for (uint8_t offset = column % 8; offset < width_remainder; ++offset) {
+                if (tronc_right) {
+                    for (uint8_t column_offset = column % 8; column_offset < width_remainder; ++column_offset) {
                         // On copie la dernière valeur du pixel de la même ligne dans le reste des colonnes
-                        mcus_line_matrix[column/8][line][offset] = mcus_line_matrix[column/8][line][(column%8) - 1];
+                        mcus_line_matrix[column/8][line][column_offset] = mcus_line_matrix[column/8][line][(column%8) - 1];
                     }
                 }
             }
