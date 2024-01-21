@@ -200,6 +200,7 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
   encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t) luminance);
 
   // Copy data from the device to host (GPU -> CPU)
+  // Acts a synchronization making sure all threads are done
   cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
 
   cudaFree(d_mcus_line_array);
