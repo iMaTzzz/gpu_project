@@ -9,64 +9,23 @@
 #include "downsampling.h"
 #include "bitstream.h"
 
-/* Cette fonction alloue une matrice de la taille de MCU/bloc voulue */
-static uint8_t ***alloc_mcus_line_matrix(uint32_t nb_mcu_line, uint8_t width, uint8_t heigth)
-{
-    uint8_t ***mcus_line = malloc(nb_mcu_line * sizeof(uint8_t **));
-    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
-        mcus_line[mcu] = malloc(heigth * sizeof(uint8_t *));
-        for (uint8_t row = 0; row < heigth; ++row) {
-            mcus_line[mcu][row] = malloc(width * sizeof(uint8_t));
-        }
-    }
-    return mcus_line;
-}
-
-/* Cette fonction libère l'espace alloué par un bloc ou une MCU. */
-static void free_mcus_line_matrix(uint8_t ***mcus_line_matrix, uint32_t nb_mcu_line, uint8_t heigth)
-{
-    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
-        for (uint8_t row = 0; row < heigth; ++row) {
-            free(mcus_line_matrix[mcu][row]);
-        }
-        free(mcus_line_matrix[mcu]);
-    }
-    free(mcus_line_matrix);
-}
-
-static int16_t **alloc_mcus_line_array(uint32_t nb_mcu_line, uint8_t width, uint8_t heigth)
-{
-    int16_t **mcus_line_array = malloc(nb_mcu_line * sizeof(int16_t *));
-    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
-        mcus_line_array[mcu] = malloc(width*heigth*sizeof(int16_t));
-    }
-    return mcus_line_array;
-}
-
-static void free_mcus_line_array(int16_t **mcus_line_array, uint32_t nb_mcu_line)
-{
-    for (uint32_t mcu = 0; mcu < nb_mcu_line; ++mcu) {
-        free(mcus_line_array[mcu]);
-    }
-    free(mcus_line_array);
-}
-
-void encoding_gpu(uint8_t ***mcus_line_matrix, int16_t **mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
     // Give size to allocate on GPU
-    const int array_size = nb_mcu_line * (64*sizeof(int16_t));
+    const int array_size = nb_mcu_line * (64 * sizeof(int16_t));
 
     // Allocate memory on the device
-    cudaMalloc(&mcus_line_array, array_size);
+    int16_t *d_mcus_line_array;
+    cudaMalloc(&d_mcus_line_array, array_size);
 
     // Copy data from the host to the device (CPU -> GPU)
-    cudaMemcpy(d_array, h_array, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(mcus_line_array, d_mcus_line_array, size, cudaMemcpyHostToDevice);
 }
 
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
     on traite chaque MCU intégralement, en effectuant les transformations successives,
-    avant de passer à la suivante. 
+    avant de passer à la suivante.
 */
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
@@ -80,9 +39,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     uint32_t nb_mcu_line = width / 8; // Nombre de MCUs par ligne
     uint8_t height_remainder = height % 8; // Nombre de lignes dépassant (en cas de troncature).
     uint8_t width_remainder = width % 8; // Nombre de colonnes dépassant (en cas de troncature).
-    bool tronc_down = 0; // Indique si il y a une troncature en bas. 
+    bool tronc_down = 0; // Indique si il y a une troncature en bas.
     bool tronc_right = 0; // Indique si il y a une troncature à droite.
-    if (height_remainder != 0) { 
+    if (height_remainder != 0) {
         nb_mcu_column++; // On rajoute une ligne de MCUs.
         tronc_down = 1; // Il y a troncature en bas.
     }
@@ -90,25 +49,26 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         nb_mcu_line++; // On rajoute une colonne de MCUs.
         tronc_right = 1; // Il y a troncature à droite.
     }
-    uint8_t ***mcus_line_matrix = alloc_mcus_line_matrix(nb_mcu_line, 8, 8);
-    int16_t **mcus_line_array = alloc_mcus_line_array(nb_mcu_line, 8, 8);
+
+    uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + 8 - width_remainder;
+
+    int16_t *mcus_line_array = malloc(8 * mcus_line_array_width * sizeof(int16_t));
 
     for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
         // Troncature en bas possible que sur la dernière ligne de MCU
-        if (tronc_down && mcu_line == nb_mcu_column - 1) {  
+        if (tronc_down && mcu_line == nb_mcu_column - 1) {
             // On parcourt les lignes de la MCU jusqu'à la dernière présente dans l'image
             for (uint8_t line = 0; line < height_remainder; ++line) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    mcus_line_matrix[column/8][line][column%8] = fgetc(image);
+                    mcus_line_array[8 * (line + column)] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
                     uint8_t column_index = column % 8;
-                    uint16_t mcu_index = column / 8;
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        mcus_line_matrix[mcu_index][line][column_offset] = mcus_line_matrix[mcu_index][line][column_offset - 1];
+                        mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
                     }
                 }
 
@@ -117,38 +77,38 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             for (uint8_t line_offset = height_remainder; line_offset < 8; ++line_offset) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    mcus_line_matrix[column/8][line_offset][column%8] = mcus_line_matrix[column/8][height_remainder - 1][column%8];
+                    mcus_line_array[8 * (line_offset + column)] = mcus_line_array[8 * (line_offset + column - 1)];
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
                     uint8_t column_index = column % 8;
-                    uint16_t mcu_index = column / 8;
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        mcus_line_matrix[mcu_index][line_offset][column_offset] = mcus_line_matrix[mcu_index][height_remainder - 1][width_remainder - 1];
+                        mcus_line_array[8 * (line_offset + column_offset)] = mcus_line_array[height * width - 1];
                     }
                 }
             }
         } else { // Pas de troncature vers le bas ou on ne se trouve pas sur la dernière ligne de MCU
             for (uint8_t line = 0; line < 8; ++line) {
                 uint32_t column;
-                for (column= 0; column < width; ++column) {
-                    mcus_line_matrix[column/8][line][column%8] = fgetc(image);
+                for (column = 0; column < width; ++column) {
+                    // mcus_line_array[line * mcus_line_array_width + column] = fgetc(image);
+                    mcus_line_array[8 * (line + column)] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
                     uint8_t column_index = column % 8;
-                    uint16_t mcu_index = column / 8;
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        mcus_line_matrix[mcu_index][line][column_offset] = mcus_line_matrix[mcu_index][line][column_offset - 1];
+                        // mcus_line_array[line * mcus_line_array_width + column_offset] = mcus_line_array[line * mcus_line_array_width + column_offset - 1];
+                        mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
                     }
                 }
             }
         }
         // TODO
         // Call GPU
-        encoding_gpu(mcus_line_matrix, mcus_line_array, true);
+        encoding_gpu(mcus_line_array, nb_mcu_line, true);
         // Take result from GPU
         // Call coding from results of GPU
     }
@@ -231,7 +191,6 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         // }
     // }
     /* On libère tous les espaces mémoire alloués. */
-    free_mcus_line_matrix(mcus_line_matrix, nb_mcu_line, 8);
     free_mcus_line_array(mcus_line_array, nb_mcu_line);
     free(predicator);
     free(index);
