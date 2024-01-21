@@ -64,7 +64,7 @@ __constant__ uint8_t cuda_quantification_table_CbCr[] = {
   0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e
 };
 
-__global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line, uint8_t luminance)
+__global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uint8_t luminance)
 {
   /******** DCT ********/
   // temporary data structure used by all threads within a block
@@ -183,7 +183,7 @@ __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line, ui
 }
 
 extern "C"
-void encoding(int16_t **h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
   // Give size to allocate on GPU
   const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
