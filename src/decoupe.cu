@@ -51,12 +51,23 @@ static void free_mcus_line_array(int16_t **mcus_line_array, uint32_t nb_mcu_line
     free(mcus_line_array);
 }
 
+void encoding_gpu(uint8_t ***mcus_line_matrix, int16_t **mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+{
+    // Give size to allocate on GPU
+    const int array_size = nb_mcu_line * (64*sizeof(int16_t));
+
+    // Allocate memory on the device
+    cudaMalloc(&mcus_line_array, array_size);
+
+    // Copy data from the host to the device (CPU -> GPU)
+    cudaMemcpy(d_array, h_array, size, cudaMemcpyHostToDevice);
+}
+
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante. 
 */
-extern "C"
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     /* On alloue tous les espaces mémoire nécessaires. */
@@ -127,6 +138,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         }
         // TODO
         // Call GPU
+        encoding_gpu(mcus_line_matrix, mcus_line_array, true);
         // Take result from GPU
         // Call coding from results of GPU
     }
