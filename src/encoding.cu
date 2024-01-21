@@ -64,7 +64,7 @@ __constant__ uint8_t cuda_quantification_table_CbCr[] = {
   0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e
 };
 
-__global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
+__global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line, uint8_t luminance)
 {
   /******** DCT ********/
   // temporary data structure used by all threads within a block
@@ -173,7 +173,13 @@ __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
   /******** zigzag ********/
 
   /******** quantify ********/
+  uint32_t index_in_mcu_line_array = blockIdx.x * (blockDim.y * blockDim.x) + threadIdx.y * blockDim.x + threadIdx.x;
+  uint32_t thread_id_in_block = threadIdx.y * blockDim.x + threadIdx.x;
 
+  if (index_in_mcu_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64) {
+    if (luminance) mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_Y[thread_id_in_block];
+    else mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
+  }
 }
 
 extern "C"
@@ -191,7 +197,7 @@ void encoding(int16_t **h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
   const dim3 block_size(8, 8);
   const dim3 grid_size(nb_mcu_line);
-  encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line);
+  encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t) luminance);
 
   // Copy data from the device to host (GPU -> CPU)
   cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
