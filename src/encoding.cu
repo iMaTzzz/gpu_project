@@ -122,7 +122,65 @@ __global__ void dct_kernel_stage_4()
     d7 = c7 - c4;
 }
 
-__global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
+__global__ void dct_kernel_stage_1()
+{
+    // To parallelize
+    int32_t a0, a1, a3, a4, a5, a6, a7, a8;
+    a0 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] + mcus_line_array[y * mcus_line_array_width + 7] - 256);
+    a1 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] + mcus_line_array[y * mcus_line_array_width + 6] - 256);
+    a2 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] + mcus_line_array[y * mcus_line_array_width + 5] - 256);
+    a3 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] + mcus_line_array[y * mcus_line_array_width + 4] - 256);
+    a4 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] - mcus_line_array[y * mcus_line_array_width + 7]);
+    a5 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] - mcus_line_array[y * mcus_line_array_width + 6]);
+    a6 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] - mcus_line_array[y * mcus_line_array_width + 5]);
+    a7 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] - mcus_line_array[y * mcus_line_array_width + 4]);
+}
+
+__global__ void dct_kernel_stage_2()
+{
+    // To parallelize
+    int32_t b0, b1, b3, b4, b5, b6, b7, b8, tmp0, tmp1;
+    b0 = a0 + a3;
+    b1 = a1 + a2;
+    b2 = a1 - a2;
+    b3 = a0 - a3;
+    // Probleme => Pourquoi je fais a4 + a6 et a5 + a7  dans l'algo original
+    tmp0 = (a4 + a7) * VALUE_1_175875602 // cos(3pi/16)*sqrt(2)
+    b4 = -VALUE_0_390180644 * a7 + tmp0; // rajouter le - dans la constante sqrt(2) * (sin(3pi/16) - cos(3pi/16))
+    b7 = -VALUE_1_961570560 * a4 + tmp0; // rajouter le - dans la constante sqrt(2) * (sin(3pi/16) + cos(3pi/16))
+    tmp1 = (a5 + a6) * VALUE_0_980785280;
+    b5 = - VALUE_0_78
+    b6 =
+}
+
+__global__ void dct_kernel_stage_3()
+{
+    int32_t c0, c1, c3, c4, c5, c6, c7, c8, tmp0;
+    c0 = b0 + b1;
+    c1 = b0 - b1;
+    tmp0 = (b2 + b3) * VALUE_0_541196100;
+    c2 = tmp0 + b3 * VALUE_0_765366865;
+    c3 = tmp0 - b2 * VALUE_1_847759065; 
+    c4 = b4 + b6;
+    c5 = b7 - b5;
+    c6 = b4 - b6;
+    c7 = b5 + b7;
+}
+
+__global__ void dct_kernel_stage_4()
+{
+    int32_t d0, d1, d3, d4, d5, d6, d7, d8;
+    d0 = c0;
+    d4 = c1;
+    d2 = c2;
+    d6 = c3;
+    d1 = c4 + c7;
+    d3 = c5 * VALUE_1_414213562;
+    d5 = c6 * VALUE_1_414213562;
+    d7 = c7 - c4;
+}
+
+__global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uint8_t luminance)
 {
   /******** DCT ********/
   // temporary data structure used by all threads within a block
@@ -242,11 +300,17 @@ __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
   /******** zigzag ********/
 
   /******** quantify ********/
+  uint32_t index_in_mcu_line_array = blockIdx.x * (blockDim.y * blockDim.x) + threadIdx.y * blockDim.x + threadIdx.x;
+  uint32_t thread_id_in_block = threadIdx.y * blockDim.x + threadIdx.x;
 
+  if (index_in_mcu_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64) {
+    if (luminance) mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_Y[thread_id_in_block];
+    else mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
+  }
 }
 
 extern "C"
-void encoding(int16_t **h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
   // Give size to allocate on GPU
   const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
@@ -260,9 +324,10 @@ void encoding(int16_t **h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
   const dim3 block_size(8, 8);
   const dim3 grid_size(nb_mcu_line);
-  encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line);
+  encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t) luminance);
 
   // Copy data from the device to host (GPU -> CPU)
+  // Acts a synchronization making sure all threads are done
   cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
 
   cudaFree(d_mcus_line_array);
