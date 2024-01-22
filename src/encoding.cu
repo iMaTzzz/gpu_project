@@ -64,6 +64,64 @@ __constant__ uint8_t cuda_quantification_table_CbCr[] = {
   0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e
 };
 
+__global__ void dct_kernel_stage_1()
+{
+    // To parallelize
+    int32_t a0, a1, a3, a4, a5, a6, a7, a8;
+    a0 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] + mcus_line_array[y * mcus_line_array_width + 7] - 256);
+    a1 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] + mcus_line_array[y * mcus_line_array_width + 6] - 256);
+    a2 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] + mcus_line_array[y * mcus_line_array_width + 5] - 256);
+    a3 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] + mcus_line_array[y * mcus_line_array_width + 4] - 256);
+    a4 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] - mcus_line_array[y * mcus_line_array_width + 7]);
+    a5 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] - mcus_line_array[y * mcus_line_array_width + 6]);
+    a6 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] - mcus_line_array[y * mcus_line_array_width + 5]);
+    a7 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] - mcus_line_array[y * mcus_line_array_width + 4]);
+}
+
+__global__ void dct_kernel_stage_2()
+{
+    // To parallelize
+    int32_t b0, b1, b3, b4, b5, b6, b7, b8, tmp0, tmp1;
+    b0 = a0 + a3;
+    b1 = a1 + a2;
+    b2 = a1 - a2;
+    b3 = a0 - a3;
+    // Probleme => Pourquoi je fais a4 + a6 et a5 + a7  dans l'algo original
+    tmp0 = (a4 + a7) * VALUE_1_175875602 // cos(3pi/16)*sqrt(2)
+    b4 = -VALUE_0_390180644 * a7 + tmp0; // rajouter le - dans la constante sqrt(2) * (sin(3pi/16) - cos(3pi/16))
+    b7 = -VALUE_1_961570560 * a4 + tmp0; // rajouter le - dans la constante sqrt(2) * (sin(3pi/16) + cos(3pi/16))
+    tmp1 = (a5 + a6) * VALUE_0_980785280;
+    b5 = - VALUE_0_78
+    b6 =
+}
+
+__global__ void dct_kernel_stage_3()
+{
+    int32_t c0, c1, c3, c4, c5, c6, c7, c8, tmp0;
+    c0 = b0 + b1;
+    c1 = b0 - b1;
+    tmp0 = (b2 + b3) * VALUE_0_541196100;
+    c2 = tmp0 + b3 * VALUE_0_765366865;
+    c3 = tmp0 - b2 * VALUE_1_847759065; 
+    c4 = b4 + b6;
+    c5 = b7 - b5;
+    c6 = b4 - b6;
+    c7 = b5 + b7;
+}
+
+__global__ void dct_kernel_stage_4()
+{
+    int32_t d0, d1, d3, d4, d5, d6, d7, d8;
+    d0 = c0;
+    d4 = c1;
+    d2 = c2;
+    d6 = c3;
+    d1 = c4 + c7;
+    d3 = c5 * VALUE_1_414213562;
+    d5 = c6 * VALUE_1_414213562;
+    d7 = c7 - c4;
+}
+
 __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
 {
   /******** DCT ********/
@@ -76,38 +134,53 @@ __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
   // check if within bounds
   if (x < (nb_mcu_line - 1) * 8 + 8 && y < (nb_mcu_line - 1) * 8 + 8) {
     int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+    int32_t a0, a1, a3, a4, a5, a6, a7, a8;
+    int32_t b0, b1, b3, b4, b5, b6, b7, b8;
+    int32_t c0, c1, c3, c4, c5, c6, c7, c8;
+    int32_t d0, d1, d3, d4, d5, d6, d7, d8;
     const uint8_t mcus_line_array_width = 8;
 
     /***** perform row-wise DCT computation *****/
-    tmp0 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] + mcus_line_array[y * mcus_line_array_width + 7] - 256);
-    tmp1 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] + mcus_line_array[y * mcus_line_array_width + 6] - 256);
-    tmp2 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] + mcus_line_array[y * mcus_line_array_width + 5] - 256);
-    tmp3 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] + mcus_line_array[y * mcus_line_array_width + 4] - 256);
+    // Stage 1
+    a0 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] + mcus_line_array[y * mcus_line_array_width + 7] - 256);
+    a1 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] + mcus_line_array[y * mcus_line_array_width + 6] - 256);
+    a2 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] + mcus_line_array[y * mcus_line_array_width + 5] - 256);
+    a3 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] + mcus_line_array[y * mcus_line_array_width + 4] - 256);
+    a4 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] - mcus_line_array[y * mcus_line_array_width + 7]);
+    a5 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] - mcus_line_array[y * mcus_line_array_width + 6]);
+    a6 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] - mcus_line_array[y * mcus_line_array_width + 5]);
+    a7 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] - mcus_line_array[y * mcus_line_array_width + 4]);
 
-    tmp4 = tmp0 + tmp3;
-    tmp5 = tmp1 + tmp2;
-    tmp6 = tmp0 - tmp3;
-    tmp7 = tmp1 - tmp2;
+    // Stage 2
+    b0 = a0 + a3;
+    b1 = a1 + a2;
+    b2 = a1 - a2;
+    b3 = a0 - a3;
 
-    shared_block[y][0] = tmp4 + tmp5;
-    shared_block[y][4] = tmp4 - tmp5;
-
-    tmp8 = (tmp6 + tmp7) * VALUE_0_541196100;
-
-    shared_block[y][2] = tmp8 + tmp6 * VALUE_0_765366865;
-    shared_block[y][6] = tmp8 - tmp7 * VALUE_1_847759065;
-
-    tmp0 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 0] - mcus_line_array[y * mcus_line_array_width + 7]);
-    tmp1 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 1] - mcus_line_array[y * mcus_line_array_width + 6]);
-    tmp2 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 2] - mcus_line_array[y * mcus_line_array_width + 5]);
-    tmp3 = (int32_t) (mcus_line_array[y * mcus_line_array_width + 3] - mcus_line_array[y * mcus_line_array_width + 4]);
-
-    tmp6 = tmp0 + tmp2;
-    tmp7 = tmp1 + tmp3;
+    tmp6 = a4 + a6;
+    tmp7 = a5 + a7;
 
     tmp8 = (tmp6 + tmp7) * VALUE_1_175875602;
     tmp6 = tmp6 * (- VALUE_0_390180644) + tmp8;
     tmp7 = tmp7 * (- VALUE_1_961570560) + tmp8;
+
+    // Stage 3
+
+    shared_block[y][0] = b0 + b1;
+    shared_block[y][4] = b0 - b1;
+    tmp8 = (b2 + b3) * VALUE_0_541196100;
+    shared_block[y][2] = tmp8 + b2 * VALUE_0_765366865;
+    shared_block[y][6] = tmp8 - b3 * VALUE_1_847759065;
+
+    // Stage 4
+
+    shared_block[y][1] = tmp0;
+    shared_block[y][3] = tmp1;
+    shared_block[y][5] = tmp2;
+    shared_block[y][7] = tmp3;
+
+
+
 
     tmp8 = (tmp0 + tmp3) * (- VALUE_0_899976223);
     tmp0 = tmp0 * VALUE_1_501321110 + tmp8 + tmp6;
@@ -117,10 +190,6 @@ __global__ void encoding_gpu(int16_t **mcus_line_array, uint32_t nb_mcu_line)
     tmp1 = tmp1 * VALUE_3_072711026 + tmp8 + tmp7;
     tmp2 = tmp2 * VALUE_2_053119869 + tmp8 + tmp6;
 
-    shared_block[y][1] = tmp0;
-    shared_block[y][3] = tmp1;
-    shared_block[y][5] = tmp2;
-    shared_block[y][7] = tmp3;
 
     // synchronize to ensure all threads have completed the row-wise DCT before doing the column-wise DCT
     __syncthreads();
