@@ -15,6 +15,7 @@
 #include "decoupe.h"
 #include "rgb_to_ycbcr.h"
 #include <stdbool.h>
+#include <time.h>
 
 
 static void verif_params(char **argv)
@@ -83,6 +84,8 @@ bool read_parameters(FILE *input, uint32_t *width, uint32_t *height)
 
 int main(int argc, char **argv)
 {
+    clock_t start, end;
+    start = clock();
     /* On initialise les valeurs de sous-échantillonnage */
     uint8_t h1 = 1;
     uint8_t v1 = 1;
@@ -253,5 +256,8 @@ int main(int argc, char **argv)
     // bitstream_write_bits(stream, 0x5, 4, false);
     // bitstream_write_bits(stream, 0x7, 3, false);
     // bitstream_write_bits(stream, 0xffda, 16, true);
+    end = clock();
+    double time_used = ((double) end - start) / CLOCKS_PER_SEC;
+    printf("time used in seconds: %f\n", time_used);
     exit(EXIT_SUCCESS);
 }
