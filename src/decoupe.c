@@ -88,7 +88,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
                     // mcus_line_array[line * mcus_line_array_width + column] = fgetc(image);
-                    mcus_line_array[8 * (line + column)] = fgetc(image);
+                    // mcus_line_array[8 * (line + column)] = fgetc(image);
+                    mcus_line_array[(column / 8) * 64 + line * 8 + column % 8] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
