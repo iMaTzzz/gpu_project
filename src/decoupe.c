@@ -17,6 +17,8 @@
 */
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
+    printf("----- NEW treat image grey -----\n");
+
     /* On alloue tous les espaces mémoire nécessaires. */
     // TODO
     uint16_t *index = malloc(sizeof(uint16_t));
@@ -236,6 +238,8 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
 */
 void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
+    printf("----- OLD treat image grey -----\n");
+
     /* On alloue tous les espaces mémoire nécessaires. */
     uint16_t *index = malloc(sizeof(uint16_t));
     uint8_t **mcu = alloc_mcu(8, 8);
@@ -260,6 +264,9 @@ void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct hu
     bool tronc_line_mcu; // Indique si il y a une troncature en bas dans la MCU courante.
     bool tronc_column_mcu; // Indique si il y a une troncature à droite dans la MCU courante.
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
+
+    uint32_t mcu_index = 0; // absolute in whole image
+
     for (uint32_t i = 0; i < line_mcu; i++) {
         // printf("i = %i\n", i);
         for (uint32_t j = 0; j < column_mcu; j++) {
@@ -319,12 +326,23 @@ void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct hu
                     }
                 }
             }
-            dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
+            // dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
             // dct_faster_loeffler(mcu, mcu_array);
             // print_array_16(mcu_array);
-            quantify(mcu_array, true); // On applique la quantification.
+            // quantify(mcu_array, true); // On applique la quantification.
             // print_array_16(mcu_array);
-            coding(mcu_array, ht_dc, ht_ac, stream, predicator, index); // On encode la MCU.
+            // coding(mcu_array, ht_dc, ht_ac, stream, predicator, index); // On encode la MCU.
+
+            // print MCUs
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcu[i][j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+            mcu_index++;
 
             /* Si on n'est pas sur une MCU de la dernière colonne */
             if (j != column_mcu - 1) {
