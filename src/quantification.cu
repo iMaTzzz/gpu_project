@@ -113,12 +113,12 @@ void quantify(int16_t *array, bool luminance)
     //printf("On crée une copie du tableau original\n");
 
     //// Run this on CPU
-    //quantify_cpu(array, luminance);
+    quantify_cpu(array, luminance);
     //printf("Quantify_cpu fait\n");
 
     // Run this on GPU
     //quantify_gpu(array_copy, luminance);
-    quantify_gpu(array, luminance);
+    //quantify_gpu(array, luminance);
     //printf("Quantify_gpu fait\n");
 
     //verify_result_quantif(array, array_copy);

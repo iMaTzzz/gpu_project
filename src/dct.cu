@@ -410,10 +410,10 @@ void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
   // }
   // std::cout << "--- after copy of mcu_array --- " << std::endl;
 
-  cpu_dct_loeffler(bloc_spatiale, mcu_array);
+  //cpu_dct_loeffler(bloc_spatiale, mcu_array);
   // std::cout << "--- after cpu_dct_loeffler --- " << std::endl;
 
-  // gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
+  gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
   // std::cout << "--- after gpu_dct_loeffler --- " << std::endl;
 
   // verify_result_dct(mcu_array, mcu_array_copy);
