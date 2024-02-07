@@ -106,7 +106,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             for (uint8_t line_offset = height_remainder; line_offset < 8; ++line_offset) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    mcus_line_array[8 * (line_offset + column)] = mcus_line_array[8 * (line_offset + column - 1)];
+                    // mcus_line_array[8 * (line_offset + column)] = mcus_line_array[8 * (line_offset + column - 1)];
+                    uint32_t same_column_in_same_mcu = (column / 8) * 64 + column % 8;
+                    mcus_line_array[same_column_in_same_mcu + line_offset * 8] = mcus_line_array[same_column_in_same_mcu + (height_remainder - 1) * 8];
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
