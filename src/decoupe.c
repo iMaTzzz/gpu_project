@@ -43,7 +43,13 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         tronc_right = 1; // Il y a troncature à droite.
     }
 
+    printf("tronc_down: %d\n", (uint8_t) tronc_down);
+    printf("tronc_right: %d\n", (uint8_t) tronc_right);
+
     uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + 8 - width_remainder;
+
+    printf("img width: %d\n", width);
+    printf("mcus line width: %d\n", mcus_line_array_width);
 
     int16_t *mcus_line_array = malloc(8 * mcus_line_array_width * sizeof(int16_t));
 
@@ -105,7 +111,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
 
         // print MCUs line
         for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
-            printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+            // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+            printf("mcu number %d\n", mcu_index);
             for (uint8_t i = 0; i < 8; i++) {
                 for (uint8_t j = 0; j < 8; j++) {
                     printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
@@ -237,7 +244,7 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante.
 */
-void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
+void treat_image_grey_o(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     printf("----- OLD treat image grey -----\n");
 
