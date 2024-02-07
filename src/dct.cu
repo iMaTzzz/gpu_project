@@ -155,6 +155,111 @@ __global__ void dct_kernel(uint8_t *bloc_spatiale, int16_t *output_mcu_array) {
   }
 }
 
+__global__ void dct_kernel_better(uint8_t *bloc_spatiale, int16_t *output_mcu_array) {
+    uint32_t tx = threadIdx.x;
+    // temporary data structure used by all threads within a block
+    __shared__ int32_t shared_block[64];
+    if (tx < 8) {
+        int32_t a0, a1, a2, a3, a4, a5, a6, a7;
+        int32_t b0, b1, b2, b3, b4, b5, b6, b7;
+        int32_t c0, c1, c2, c3, c4, c5, c6, c7;
+        int32_t tmp0, tmp1, tmp2;
+        /* Row-wise DCT */
+        // beginning of the row = tx*8 and thus we have to compute the offset to find all the values
+        // of the corresponding row
+        uint8_t row_offset = tx*8;
+        // Stage 1 contains 8 adds (+ 4 offsets)
+        a0 = (int32_t) (bloc_spatiale[row_offset + 0] + bloc_spatiale[row_offset + 7] - 256);
+        a1 = (int32_t) (bloc_spatiale[row_offset + 1] + bloc_spatiale[row_offset + 6] - 256);
+        a2 = (int32_t) (bloc_spatiale[row_offset + 2] + bloc_spatiale[row_offset + 5] - 256);
+        a3 = (int32_t) (bloc_spatiale[row_offset + 3] + bloc_spatiale[row_offset + 4] - 256);
+        a4 = (int32_t) (bloc_spatiale[row_offset + 3] - bloc_spatiale[row_offset + 4]);
+        a5 = (int32_t) (bloc_spatiale[row_offset + 2] - bloc_spatiale[row_offset + 5]);
+        a6 = (int32_t) (bloc_spatiale[row_offset + 1] - bloc_spatiale[row_offset + 6]);
+        a7 = (int32_t) (bloc_spatiale[row_offset + 0] - bloc_spatiale[row_offset + 7]);
+
+        // Stage 2 contains 6 mult + 10 adds
+        b0 = a0 + a3;
+        b1 = a1 + a2;
+        b2 = a1 - a2;
+        b3 = a0 - a3;
+        tmp0 = VALUE_0_831469612 * (a4 + a7);
+        b4 = VALUE_MINUS_0_275899379 * a7 + tmp0;
+        b7 = VALUE_MINUS_1_387039845 * a4 + tmp0;
+        tmp1 = VALUE_0_980785280 * (a5 + a6) ;
+        b5 = VALUE_MINUS_0_785694958 * a6 + tmp1;
+        b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
+
+        // Stage 3 contains 3 mult + 9 adds
+        tmp2 = VALUE_0_541196100 * (b2 + b3);
+        shared_block[row_offset + 0] = b0 + b1;
+        shared_block[row_offset + 2] = VALUE_0_765366865 * b3 + tmp2;
+        shared_block[row_offset + 4] = b0 - b1;
+        shared_block[row_offset + 6] = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        c4 = b4 + b6;
+        c5 = b7 - b5;
+        c6 = b4 - b6;
+        c7 = b5 + b7;
+
+        // Stage 4 contains 2 mults + 2 adds
+        shared_block[row_offset + 1] = c4 + c7;
+        shared_block[row_offset + 3] = c5 * VALUE_1_414213562;
+        shared_block[row_offset + 5] = c6 * VALUE_1_414213562;
+        shared_block[row_offset + 7] = c7 - c4;
+
+        // synchronize to ensure all threads have completed the row-wise DCT before doing the column-wise DCT
+        __syncthreads();
+
+        /* Column-wise DCT */
+        // tx == column => Each thread is assigned a column which corresponds to their id
+        // Stage 1 contains 8 adds
+        a0 = shared_block[0*8 + tx] + shared_block[7*8 + tx];
+        a1 = shared_block[1*8 + tx] + shared_block[6*8 + tx];
+        a2 = shared_block[2*8 + tx] + shared_block[5*8 + tx];
+        a3 = shared_block[3*8 + tx] + shared_block[4*8 + tx];
+        a4 = shared_block[3*8 + tx] - shared_block[4*8 + tx];
+        a5 = shared_block[2*8 + tx] - shared_block[5*8 + tx];
+        a6 = shared_block[1*8 + tx] - shared_block[6*8 + tx];
+        a7 = shared_block[0*8 + tx] - shared_block[7*8 + tx];
+
+        // Stage 2 contains 6 mult + 10 adds
+        b0 = a0 + a3;
+        b1 = a1 + a2;
+        b2 = a1 - a2;
+        b3 = a0 - a3;
+        tmp0 = VALUE_0_831469612 * (a4 + a7);
+        b4 = VALUE_MINUS_0_275899379 * a7 + tmp0;
+        b7 = VALUE_MINUS_1_387039845 * a4 + tmp0;
+        tmp1 = VALUE_0_980785280 * (a5 + a6) ;
+        b5 = VALUE_MINUS_0_785694958 * a6 + tmp1;
+        b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
+
+        // Stage 3 contains 3 mult + 9 adds
+        c0 = b0 + b1;
+        c1 = b0 - b1;
+        tmp2 = VALUE_0_541196100 * (b2 + b3);
+        c2 = VALUE_0_765366865 * b3 + tmp2;
+        c3 = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        c4 = b4 + b6;
+        c5 = b7 - b5;
+        c6 = b4 - b6;
+        c7 = b5 + b7;
+
+        // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
+        mcu_array[matrix_zig_zag[0][tx]] = (int16_t) (c0 >> 3);
+        mcu_array[matrix_zig_zag[2][tx]] = (int16_t) (c2 >> 3);
+        mcu_array[matrix_zig_zag[4][tx]] = (int16_t) (c1 >> 3);
+        mcu_array[matrix_zig_zag[6][tx]] = (int16_t) (c3 >> 3);
+        mcu_array[matrix_zig_zag[1][tx]] = (int16_t) ((c4 + c7) >> 3);
+        mcu_array[matrix_zig_zag[3][tx]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[5][tx]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[7][tx]] = (int16_t) ((c7 - c4) >> 3);
+
+        // Not necessary ?
+        __syncthreads();
+    }
+}
+
 void gpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *h_mcu_array)
 {
   const uint8_t n_rows = 8;
@@ -177,9 +282,10 @@ void gpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *h_mcu_array)
   cudaMemcpy(d_mcu_array, h_mcu_array, array_size * sizeof(int16_t), cudaMemcpyHostToDevice);
 
   // call kernel
-  const dim3 block_size(8, 8);
-  const dim3 grid_size((n_cols + block_size.x - 1) / block_size.x, (n_rows + block_size.y - 1) / block_size.y);
-  dct_kernel<<<grid_size, block_size>>>(d_bloc_spatiale, d_mcu_array);
+  const dim3 block_size(8, 1, 1);
+  const dim3 grid_size(1, 1, 1);
+  //dct_kernel<<<grid_size, block_size>>>(d_bloc_spatiale, d_mcu_array);
+  dct_kernel_better<<<grid_size, block_size>>>(d_bloc_spatiale, d_mcu_array);
 
   // Copy result of gpu computation back on host
   // cudaMemcpy will wait for kernel completion (acts as synchronization barrier)
