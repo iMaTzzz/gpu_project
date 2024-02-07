@@ -6,11 +6,6 @@
 #include "zigzag.h"
 
 /* Constantes utilisées dans les deux versions des algorithmes de Loeffler */
-#define VALUE_0_765366865 0.765366865 // sqrt(2) * (sin(3pi/8) - cos(3pi/8))
-#define VALUE_1_847759065 1.847759065 // sqrt(2) * (cos(3pi/8) + sin(3pi/8))
-#define VALUE_MINUS_1_847759065 -1.847759065 // -sqrt(2) * (cos(3pi/8) + sin(3pi/8))
-#define VALUE_1_175875602 1.175875602 // cos(pi/16) + sin(pi/16)
-#define VALUE_MINUS_1_175875602 -1.175875602 // -(cos(pi/16) + sin(pi/16))
 #define VALUE_0_390180644 0.390180644
 #define VALUE_1_961570560 1.961570560
 #define VALUE_0_899976223 0.899976223
@@ -19,7 +14,11 @@
 #define VALUE_2_562915447 2.562915447
 #define VALUE_3_072711026 3.072711026
 #define VALUE_2_053119869 2.053119869
-#define VALUE_0_707106781 0.707106781
+#define VALUE_1_175875602 1.175875602 // cos(pi/16) + sin(pi/16)
+#define VALUE_0_765366865 0.765366865 // sqrt(2) * (sin(3pi/8) - cos(3pi/8))
+#define VALUE_1_847759065 1.847759065 // sqrt(2) * (cos(3pi/8) + sin(3pi/8))
+#define VALUE_MINUS_1_847759065 -1.847759065 // -sqrt(2) * (cos(3pi/8) + sin(3pi/8))
+#define VALUE_MINUS_1_175875602 -1.175875602 // -(cos(pi/16) + sin(pi/16))
 #define VALUE_0_382683433 0.382683433 // sin(pi/8)
 #define VALUE_0_541196100 0.541196100 // sqrt(2) * cos(3pi/8)
 #define VALUE_MINUS_0_541196100 -0.541196100 // -sqrt(2) * cos(3pi/8)
@@ -34,7 +33,6 @@
 #define VALUE_0_195090322 0.195090322 // sin(pi/16)
 #define VALUE_0_980785280 0.980785280 // cos(pi/16)
 #define VALUE_MINUS_0_980785280 -0.980785280 // -cos(pi/16)
-#define VALUE_1_662939225 1.662939225
 #define VALUE_0_923879533 0.923879533 // cos(pi/8)
 #define VALUE_MINUS_0_923879533 -0.923879533 // -cos(pi/8)
 #define VALUE_MINUS_0_785694958 -0.785694958 // sin(pi/16) - cos(pi/16)
