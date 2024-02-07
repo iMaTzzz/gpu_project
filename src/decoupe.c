@@ -103,7 +103,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
                         // mcus_line_array[line * mcus_line_array_width + column_offset] = mcus_line_array[line * mcus_line_array_width + column_offset - 1];
-                        mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
+                        // mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
+                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 + line * 8;
+                        mcus_line_array[row_in_last_mcu + column_offset] = mcus_line_array[row_in_last_mcu + column_index - 1];
                     }
                 }
             }
