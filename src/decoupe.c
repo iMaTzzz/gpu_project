@@ -69,14 +69,17 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             for (uint8_t line = 0; line < height_remainder; ++line) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    mcus_line_array[8 * (line + column)] = fgetc(image);
+                    // mcus_line_array[8 * (line + column)] = fgetc(image);
+                    mcus_line_array[(column / 8) * 64 + line * 8 + column % 8] = fgetc(image);
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
                     uint8_t column_index = column % 8;
                     for (uint8_t column_offset = column_index; column_offset < 8; ++column_offset) {
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
+                        // mcus_line_array[8 * (line + column_offset)] = mcus_line_array[8 * (line + column_offset) - 1];
+                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 + line * 8;
+                        mcus_line_array[row_in_last_mcu + column_offset] = mcus_line_array[row_in_last_mcu + column_offset - 1];
                     }
                 }
 
