@@ -60,13 +60,13 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
 
 // static void print_array_16(int16_t *array)
 // {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hx\t", array[i*8+j]);
-//             // printf("%hi\t", array[i*8+j]);
-//         }
-//         printf("\n");
-//     }
+    // for (int i = 0; i < 8; i++) {
+        // for (int j = 0; j < 8; j++) {
+            // printf("%04hx\t", array[i*8+j]);
+            // // printf("%hi\t", array[i*8+j]);
+        // }
+        // printf("\n");
+    // }
 // }
 
 // static void print_matrix_mcu(uint8_t **matrix, uint8_t width, uint8_t heigth)
@@ -184,8 +184,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
-            dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
-            // dct_faster_loeffler(mcu, mcu_array);
+            // dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
+            dct_loeffler_better(mcu, mcu_array);
             // print_array_16(mcu_array);
             quantify(mcu_array, true); // On applique la quantification.
             // print_array_16(mcu_array);
@@ -334,8 +334,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                             bloc[m][n] = mcu_Y[8*k+m][8*l+n];
                         }
                     }
-                    dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
+                    dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -360,8 +360,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         }
                     }
                     //print_matrix_8(mcu_Cb);
-                    dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
+                    dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -387,8 +387,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         }
                     }
                     //print_matrix_8(mcu_Cb);
-                    dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
+                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
+                    dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
