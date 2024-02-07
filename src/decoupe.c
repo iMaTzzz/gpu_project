@@ -229,77 +229,10 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
     free(mcu);
 }
 
-// static int16_t **allocate_matrix_uint16() 
-// {
-//     int16_t **matrix = malloc(8 * sizeof(int16_t *));
-//     for (int row = 0; row < 8; row++) {
-//         matrix[row] = malloc(8 * sizeof(int16_t));
-//     }
-//     return matrix;
-// }
-
-// void print_matrix_8(uint8_t **matrix)
-// {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hhx\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-//     printf("\n");
-// }
-
-// static void print_matrix_16(int16_t **matrix)
-// {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hx\t", matrix[i][j]);
-//             // printf("%hi\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-// }
-
-// static void print_array_16(int16_t *array)
-// {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hx\t", array[i*8+j]);
-//             // printf("%hi\t", array[i*8+j]);
-//         }
-//         printf("\n");
-//     }
-// }
-
-// static void print_matrix_mcu(uint8_t **matrix, uint8_t width, uint8_t heigth)
-// {
-//     for (int i = 0; i < heigth; i++) {
-//         if (i == 8) {
-//             printf("\n");
-//         }
-//         for (int j = 0; j < width; j++) {
-//             if (j == 8) {
-//                 printf("\t");
-//             }
-//              printf("%02hhx\t", matrix[i][j]);
-//             // printf("%hhu\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-//     printf("\n");
-// }
-
-// static void free_matrix(int16_t **matrix) {
-//     for (int row = 0; row < 8; row++) {
-//         free(matrix[row]);
-//     }
-//     free(matrix);
-// }
-
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
     on traite chaque MCU intégralement, en effectuant les transformations successives,
-    avant de passer à la suivante. 
+    avant de passer à la suivante.
 */
 void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
@@ -310,11 +243,11 @@ void treat_image_grey_v2(FILE *image, uint32_t width, uint32_t height, struct hu
     int16_t *mcu_array = malloc(64 * sizeof(int16_t));
     uint32_t line_mcu = height / 8; // Nombre de lignes de MCUs.
     uint32_t column_mcu = width / 8; // Nombre de colonnes de MCUs.
-    bool tronc_line = 0; // Indique si il y a une troncature en bas. 
+    bool tronc_line = 0; // Indique si il y a une troncature en bas.
     bool tronc_column = 0; // Indique si il y a une troncature à droite.
     uint8_t height_remainder = height % 8; // Nombre de lignes dépassant (en cas de troncature).
     uint8_t width_remainder = width % 8; // Nombre de colonnes dépassant (en cas de troncature).
-    if (height_remainder != 0) { 
+    if (height_remainder != 0) {
         line_mcu++; // On rajoute une ligne de MCUs.
         tronc_line = 1; // Il y a troncature en bas.
     }
