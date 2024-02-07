@@ -45,6 +45,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
 
     int16_t *mcus_line_array = malloc(8 * mcus_line_array_width * sizeof(int16_t));
 
+    uint32_t mcu_index = 0; // absolute in whole image
+
     for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
         // Troncature en bas possible que sur la dernière ligne de MCU
         if (tronc_down && mcu_line == nb_mcu_column - 1) {
@@ -97,14 +99,28 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 }
             }
         }
+
+        // print MCUs line
+        for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+            printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+            mcu_index++;
+        }
+
         // TODO
         // Call GPU
-        encoding(mcus_line_array, nb_mcu_line, true);
+        // encoding(mcus_line_array, nb_mcu_line, true);
         // Take result from GPU
         // Call coding from results of GPU
-        for (uint8_t mcu_index = 0; mcu_index < nb_mcu_line; ++mcu_index) {
-            coding(mcus_line_array + mcu_index * 64, ht_dc, ht_ac, stream, predicator, index);
-        }
+        // for (uint8_t mcu_index = 0; mcu_index < nb_mcu_line; ++mcu_index) {
+        //     coding(mcus_line_array + mcu_index * 64, ht_dc, ht_ac, stream, predicator, index);
+        // }
     }
 
     // /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
