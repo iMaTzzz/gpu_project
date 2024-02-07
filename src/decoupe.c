@@ -184,8 +184,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
-            // dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
-            dct_loeffler_better(mcu, mcu_array);
+            dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
             // print_array_16(mcu_array);
             quantify(mcu_array, true); // On applique la quantification.
             // print_array_16(mcu_array);
@@ -334,8 +333,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                             bloc[m][n] = mcu_Y[8*k+m][8*l+n];
                         }
                     }
-                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    dct_loeffler_better(bloc, bloc_array);
+                    dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -361,7 +359,6 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     }
                     //print_matrix_8(mcu_Cb);
                     dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -388,7 +385,6 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     }
                     //print_matrix_8(mcu_Cb);
                     dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    // dct_faster_loeffler(bloc, mcu_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
