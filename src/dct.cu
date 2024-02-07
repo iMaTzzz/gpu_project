@@ -194,96 +194,95 @@ void gpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *h_mcu_array)
 /* Fonction qui applique la transformée 2D grâce à l'algorithme de Loeffler non optimisé mais précis */
 void cpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
 {
-  int32_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
-  int32_t tab_tmp[8][8];
-  for (uint8_t row = 0; row < 8; row++) {
-    tmp0 = (int32_t) (bloc_spatiale[row][0] + bloc_spatiale[row][7] - 256);
-    tmp1 = (int32_t) (bloc_spatiale[row][1] + bloc_spatiale[row][6] - 256);
-    tmp2 = (int32_t) (bloc_spatiale[row][2] + bloc_spatiale[row][5] - 256);
-    tmp3 = (int32_t) (bloc_spatiale[row][3] + bloc_spatiale[row][4] - 256);
+    int32_t tab_tmp[8][8];
+    int32_t a0, a1, a2, a3, a4, a5, a6, a7;
+    int32_t b0, b1, b2, b3, b4, b5, b6, b7;
+    int32_t c0, c1, c2, c3, c4, c5, c6, c7;
+    int32_t tmp0, tmp1, tmp2;
+    for (uint8_t row = 0; row < 8; row++) {
+        // Stage 1 contains 8 adds (+ 4 offsets)
+        a0 = (int32_t) (bloc_spatiale[row][0] + bloc_spatiale[row][7] - 256);
+        a1 = (int32_t) (bloc_spatiale[row][1] + bloc_spatiale[row][6] - 256);
+        a2 = (int32_t) (bloc_spatiale[row][2] + bloc_spatiale[row][5] - 256);
+        a3 = (int32_t) (bloc_spatiale[row][3] + bloc_spatiale[row][4] - 256);
+        a4 = (int32_t) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
+        a5 = (int32_t) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
+        a6 = (int32_t) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
+        a7 = (int32_t) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
 
-    tmp4 = tmp0 + tmp3;
-    tmp5 = tmp1 + tmp2;
-    tmp6 = tmp0 - tmp3;
-    tmp7 = tmp1 - tmp2;
+        // Stage 2 contains 6 mult + 10 adds
+        b0 = a0 + a3;
+        b1 = a1 + a2;
+        b2 = a1 - a2;
+        b3 = a0 - a3;
+        tmp0 = VALUE_0_831469612 * (a4 + a7);
+        b4 = VALUE_MINUS_0_275899379 * a7 + tmp0;
+        b7 = VALUE_MINUS_1_387039845 * a4 + tmp0;
+        tmp1 = VALUE_0_980785280 * (a5 + a6) ;
+        b5 = VALUE_MINUS_0_785694958 * a6 + tmp1;
+        b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
 
-    tab_tmp[row][0] = tmp4 + tmp5;
-    tab_tmp[row][4] = tmp4 - tmp5;
+        // Stage 3 contains 3 mult + 9 adds
+        tmp2 = VALUE_0_541196100 * (b2 + b3);
+        tab_tmp[row][0] = b0 + b1;
+        tab_tmp[row][2] = VALUE_0_765366865 * b3 + tmp2;
+        tab_tmp[row][4] = b0 - b1;
+        tab_tmp[row][6] = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        c4 = b4 + b6;
+        c5 = b7 - b5;
+        c6 = b4 - b6;
+        c7 = b5 + b7;
 
-    tmp8 = (tmp6 + tmp7) * VALUE_0_541196100;
+        // Stage 4 contains 2 mults + 2 adds
+        tab_tmp[row][1] = c4 + c7;
+        tab_tmp[row][3] = c5 * VALUE_1_414213562;
+        tab_tmp[row][5] = c6 * VALUE_1_414213562;
+        tab_tmp[row][7] = c7 - c4;
+    }
+    for (uint8_t column = 0; column < 8; column++) {
+        // Stage 1 contains 8 adds
+        a0 = tab_tmp[0][column] + tab_tmp[7][column];
+        a1 = tab_tmp[1][column] + tab_tmp[6][column];
+        a2 = tab_tmp[2][column] + tab_tmp[5][column];
+        a3 = tab_tmp[3][column] + tab_tmp[4][column];
+        a4 = tab_tmp[3][column] - tab_tmp[4][column];
+        a5 = tab_tmp[2][column] - tab_tmp[5][column];
+        a6 = tab_tmp[1][column] - tab_tmp[6][column];
+        a7 = tab_tmp[0][column] - tab_tmp[7][column];
 
-    tab_tmp[row][2] = tmp8 + tmp6 * VALUE_0_765366865;
-    tab_tmp[row][6] = tmp8 - tmp7 * VALUE_1_847759065;
+        // Stage 2 contains 6 mult + 10 adds
+        b0 = a0 + a3;
+        b1 = a1 + a2;
+        b2 = a1 - a2;
+        b3 = a0 - a3;
+        tmp0 = VALUE_0_831469612 * (a4 + a7);
+        b4 = VALUE_MINUS_0_275899379 * a7 + tmp0;
+        b7 = VALUE_MINUS_1_387039845 * a4 + tmp0;
+        tmp1 = VALUE_0_980785280 * (a5 + a6) ;
+        b5 = VALUE_MINUS_0_785694958 * a6 + tmp1;
+        b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
 
-    tmp0 = (int32_t) (bloc_spatiale[row][0] - bloc_spatiale[row][7]);
-    tmp1 = (int32_t) (bloc_spatiale[row][1] - bloc_spatiale[row][6]);
-    tmp2 = (int32_t) (bloc_spatiale[row][2] - bloc_spatiale[row][5]);
-    tmp3 = (int32_t) (bloc_spatiale[row][3] - bloc_spatiale[row][4]);
+        // Stage 3 contains 3 mult + 9 adds
+        c0 = b0 + b1;
+        c1 = b0 - b1;
+        tmp2 = VALUE_0_541196100 * (b2 + b3);
+        c2 = VALUE_0_765366865 * b3 + tmp2;
+        c3 = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        c4 = b4 + b6;
+        c5 = b7 - b5;
+        c6 = b4 - b6;
+        c7 = b5 + b7;
 
-    tmp6 = tmp0 + tmp2;
-    tmp7 = tmp1 + tmp3;
-
-    tmp8 = (tmp6 + tmp7) * VALUE_1_175875602;
-    tmp6 = tmp6 * (- VALUE_0_390180644) + tmp8;
-    tmp7 = tmp7 * (- VALUE_1_961570560) + tmp8;
-
-    tmp8 = (tmp0 + tmp3) * (- VALUE_0_899976223);
-    tmp0 = tmp0 * VALUE_1_501321110 + tmp8 + tmp6;
-    tmp3 = tmp3 * VALUE_0_298631336 + tmp8 + tmp7;
-
-    tmp8 = (tmp1 + tmp2) * (- VALUE_2_562915447);
-    tmp1 = tmp1 * VALUE_3_072711026 + tmp8 + tmp7;
-    tmp2 = tmp2 * VALUE_2_053119869 + tmp8 + tmp6;
-
-    tab_tmp[row][1] = tmp0;
-    tab_tmp[row][3] = tmp1;
-    tab_tmp[row][5] = tmp2;
-    tab_tmp[row][7] = tmp3;
-  }
-  for (uint8_t column = 0; column < 8; column++) {
-    tmp0 = tab_tmp[0][column] + tab_tmp[7][column];
-    tmp1 = tab_tmp[1][column] + tab_tmp[6][column];
-    tmp2 = tab_tmp[2][column] + tab_tmp[5][column];
-    tmp3 = tab_tmp[3][column] + tab_tmp[4][column];
-
-    tmp4 = tmp0 + tmp3;
-    tmp5 = tmp1 + tmp2;
-    tmp6 = tmp0 - tmp3;
-    tmp7 = tmp1 - tmp2;
-
-    tmp0 = tab_tmp[0][column] - tab_tmp[7][column];
-    tmp1 = tab_tmp[1][column] - tab_tmp[6][column];
-    tmp2 = tab_tmp[2][column] - tab_tmp[5][column];
-    tmp3 = tab_tmp[3][column] - tab_tmp[4][column];
-
-    mcu_array[matrix_zig_zag[0][column]] = ((int16_t) (tmp4 + tmp5) >> 3); 
-    mcu_array[matrix_zig_zag[4][column]] = ((int16_t) (tmp4 - tmp5) >> 3); 
-
-    tmp8 = (tmp6 + tmp7) * VALUE_0_541196100;
-    
-    mcu_array[matrix_zig_zag[2][column]] = ((int16_t) (tmp8 + tmp6 * VALUE_0_765366865) >> 3);
-    mcu_array[matrix_zig_zag[6][column]] = ((int16_t) (tmp8 - tmp7 * VALUE_1_847759065) >> 3);
-
-    tmp6 = tmp0 + tmp2;
-    tmp7 = tmp1 + tmp3;
-
-    tmp8 = (tmp6 + tmp7) * VALUE_1_175875602;
-    tmp6 = tmp6 * (- VALUE_0_390180644) + tmp8;
-    tmp7 = tmp7 * (- VALUE_1_961570560) + tmp8;
-
-    tmp8 = (tmp0 + tmp3) * (- VALUE_0_899976223);
-    tmp0 = tmp0 * VALUE_1_501321110 + tmp8 + tmp6;
-    tmp3 = tmp3 * VALUE_0_298631336 + tmp8 + tmp7;
-    
-    tmp8 = (tmp1 + tmp2) * (- VALUE_2_562915447);
-    tmp1 = tmp1 * VALUE_3_072711026 + tmp8 + tmp7;
-    tmp2 = tmp2 * VALUE_2_053119869 + tmp8 + tmp6;
-
-    mcu_array[matrix_zig_zag[1][column]] = (int16_t) (tmp0 >> 3);
-    mcu_array[matrix_zig_zag[3][column]] = (int16_t) (tmp1 >> 3);
-    mcu_array[matrix_zig_zag[5][column]] = (int16_t) (tmp2 >> 3);
-    mcu_array[matrix_zig_zag[7][column]] = (int16_t) (tmp3 >> 3);
-  }
+        // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
+        mcu_array[matrix_zig_zag[0][column]] = (int16_t) (c0 >> 3);
+        mcu_array[matrix_zig_zag[2][column]] = (int16_t) (c2 >> 3);
+        mcu_array[matrix_zig_zag[4][column]] = (int16_t) (c1 >> 3);
+        mcu_array[matrix_zig_zag[6][column]] = (int16_t) (c3 >> 3);
+        mcu_array[matrix_zig_zag[1][column]] = (int16_t) ((c4 + c7) >> 3);
+        mcu_array[matrix_zig_zag[3][column]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[5][column]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[7][column]] = (int16_t) ((c7 - c4) >> 3);
+    }
 }
 
 void verify_result_dct(int16_t mcu_array[64], int16_t mcu_array_copy[64])
