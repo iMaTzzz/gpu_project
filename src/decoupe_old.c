@@ -99,7 +99,7 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante. 
 */
-void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
+void treat_image_grey_old(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     /* On alloue tous les espaces mémoire nécessaires. */
     uint16_t *index = malloc(sizeof(uint16_t));

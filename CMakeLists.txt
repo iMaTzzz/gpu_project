@@ -3,7 +3,7 @@ project(gpu_project LANGUAGES C CUDA)
 
 # Set C and CUDA compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -O2")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Iinclude")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Iinclude -Xcompiler -Wunused-parameter")
 
 # Include directories
 include_directories(include)
