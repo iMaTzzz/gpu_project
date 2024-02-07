@@ -51,6 +51,12 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     printf("img width: %d\n", width);
     printf("mcus line width: %d\n", mcus_line_array_width);
 
+    printf("nb_mcu_line: %d\n", nb_mcu_line);
+
+
+    printf("img height: %d\n", width);
+    printf("nb_mcu_column: %d\n", nb_mcu_column);
+
     int16_t *mcus_line_array = malloc(8 * mcus_line_array_width * sizeof(int16_t));
 
     uint32_t mcu_index = 0; // absolute in whole image
@@ -89,6 +95,24 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
+
+            // for debugging bottom troncature of MCUs (but not both bottom & right troncatures)
+            if (mcu_index == 73) exit(3);
+
+            // print MCUs line
+            for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+                // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                    }
+                    printf("\n");
+                }
+                printf("\n\n");
+                mcu_index++;
+            }
+
         } else { // Pas de troncature vers le bas ou on ne se trouve pas sur la dernière ligne de MCU
             for (uint8_t line = 0; line < 8; ++line) {
                 uint32_t column;
@@ -111,6 +135,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             }
         }
 
+/*
         // print MCUs line
         for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
             // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
@@ -124,6 +149,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             printf("\n\n");
             mcu_index++;
         }
+*/
 
         // TODO
         // Call GPU
