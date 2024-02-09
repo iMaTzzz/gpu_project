@@ -8,9 +8,6 @@
 #include <assert.h>
 
 /* Constantes utilisées dans les deux versions des algorithmes de Loeffler */
-#define VALUE_0_765366865 0.765366865
-#define VALUE_1_847759065 1.847759065
-#define VALUE_1_175875602 1.175875602
 #define VALUE_0_390180644 0.390180644
 #define VALUE_1_961570560 1.961570560
 #define VALUE_0_899976223 0.899976223
@@ -19,18 +16,29 @@
 #define VALUE_2_562915447 2.562915447
 #define VALUE_3_072711026 3.072711026
 #define VALUE_2_053119869 2.053119869
-#define VALUE_0_707106781 0.707106781
-#define VALUE_0_382683433 0.382683433
-#define VALUE_0_541196100 0.541196100
-#define VALUE_1_306562965 1.306562965
-#define VALUE_0_275899379 0.275899379
-#define VALUE_1_387039845 1.387039845
-#define VALUE_1_414213562 1.414213562
-#define VALUE_0_555570233 0.555570233
-#define VALUE_0_831469612 0.831469612
-#define VALUE_0_195090322 0.195090322
-#define VALUE_0_980785280 0.980785280
-#define VALUE_1_662939225 1.662939225
+#define VALUE_1_175875602 1.175875602 // cos(pi/16) + sin(pi/16)
+#define VALUE_0_765366865 0.765366865 // sqrt(2) * (sin(3pi/8) - cos(3pi/8))
+#define VALUE_1_847759065 1.847759065 // sqrt(2) * (cos(3pi/8) + sin(3pi/8))
+#define VALUE_MINUS_1_847759065 -1.847759065 // -sqrt(2) * (cos(3pi/8) + sin(3pi/8))
+#define VALUE_MINUS_1_175875602 -1.175875602 // -(cos(pi/16) + sin(pi/16))
+#define VALUE_0_382683433 0.382683433 // sin(pi/8)
+#define VALUE_0_541196100 0.541196100 // sqrt(2) * cos(3pi/8)
+#define VALUE_MINUS_0_541196100 -0.541196100 // -sqrt(2) * cos(3pi/8)
+#define VALUE_1_306562965 1.306562965 // sqrt(2) * sin(3pi/8)
+#define VALUE_MINUS_0_275899379 -0.275899379 // sin(3pi/16) - cos(3pi/16)
+#define VALUE_1_387039845 1.387039845 // cos(3pi/16) + sin(3pi/16)
+#define VALUE_MINUS_1_387039845 -1.387039845 // -(cos(3pi/16) + sin(3pi/16))
+#define VALUE_1_414213562 1.414213562 // sqrt(2)
+#define VALUE_0_555570233 0.555570233 // sin(3pi/16)
+#define VALUE_0_831469612 0.831469612 // cos(3pi/16)
+#define VALUE_MINUS_0_831469612 -0.831469612 // -cos(3pi/16)
+#define VALUE_0_195090322 0.195090322 // sin(pi/16)
+#define VALUE_0_980785280 0.980785280 // cos(pi/16)
+#define VALUE_MINUS_0_980785280 -0.980785280 // -cos(pi/16)
+#define VALUE_0_923879533 0.923879533 // cos(pi/8)
+#define VALUE_MINUS_0_923879533 -0.923879533 // -cos(pi/8)
+#define VALUE_MINUS_0_785694958 -0.785694958 // sin(pi/16) - cos(pi/16)
+
 
 __constant__ uint8_t cuda_matrix_zig_zag[8][8] = {
   {0, 1, 5, 6, 14, 15, 27, 28},
@@ -162,7 +170,7 @@ __global__ void dct_kernel_better(uint8_t *bloc_spatiale, int16_t *output_mcu_ar
     if (tx < 8) {
         int32_t a0, a1, a2, a3, a4, a5, a6, a7;
         int32_t b0, b1, b2, b3, b4, b5, b6, b7;
-        int32_t c0, c1, c2, c3, c4, c5, c6, c7;
+        int32_t c4, c5, c6, c7;
         int32_t tmp0, tmp1, tmp2;
         /* Row-wise DCT */
         // beginning of the row = tx*8 and thus we have to compute the offset to find all the values
@@ -235,28 +243,21 @@ __global__ void dct_kernel_better(uint8_t *bloc_spatiale, int16_t *output_mcu_ar
         b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
 
         // Stage 3 contains 3 mult + 9 adds
-        c0 = b0 + b1;
-        c1 = b0 - b1;
         tmp2 = VALUE_0_541196100 * (b2 + b3);
-        c2 = VALUE_0_765366865 * b3 + tmp2;
-        c3 = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        output_mcu_array[cuda_matrix_zig_zag[0][tx]] = (int16_t) ((b0 + b1) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[2][tx]] = (int16_t) (((int32_t) (VALUE_0_765366865 * b3 + tmp2)) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[4][tx]] = (int16_t) ((b0 - b1) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[6][tx]] = (int16_t) (((int32_t) (VALUE_MINUS_1_847759065 * b2 + tmp2)) >> 3);
         c4 = b4 + b6;
         c5 = b7 - b5;
         c6 = b4 - b6;
         c7 = b5 + b7;
 
         // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
-        mcu_array[matrix_zig_zag[0][tx]] = (int16_t) (c0 >> 3);
-        mcu_array[matrix_zig_zag[2][tx]] = (int16_t) (c2 >> 3);
-        mcu_array[matrix_zig_zag[4][tx]] = (int16_t) (c1 >> 3);
-        mcu_array[matrix_zig_zag[6][tx]] = (int16_t) (c3 >> 3);
-        mcu_array[matrix_zig_zag[1][tx]] = (int16_t) ((c4 + c7) >> 3);
-        mcu_array[matrix_zig_zag[3][tx]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
-        mcu_array[matrix_zig_zag[5][tx]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
-        mcu_array[matrix_zig_zag[7][tx]] = (int16_t) ((c7 - c4) >> 3);
-
-        // Not necessary ?
-        __syncthreads();
+        output_mcu_array[cuda_matrix_zig_zag[1][tx]] = (int16_t) ((c4 + c7) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[3][tx]] = (int16_t) (((int32_t) (c5 * VALUE_1_414213562)) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[5][tx]] = (int16_t) (((int32_t) (c6 * VALUE_1_414213562)) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[7][tx]] = (int16_t) ((c7 - c4) >> 3);
     }
 }
 
@@ -303,7 +304,7 @@ void cpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
     int32_t tab_tmp[8][8];
     int32_t a0, a1, a2, a3, a4, a5, a6, a7;
     int32_t b0, b1, b2, b3, b4, b5, b6, b7;
-    int32_t c0, c1, c2, c3, c4, c5, c6, c7;
+    int32_t c4, c5, c6, c7;
     int32_t tmp0, tmp1, tmp2;
     for (uint8_t row = 0; row < 8; row++) {
         // Stage 1 contains 8 adds (+ 4 offsets)
@@ -369,24 +370,20 @@ void cpu_dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
         b6 = VALUE_MINUS_1_175875602 * a5 + tmp1;
 
         // Stage 3 contains 3 mult + 9 adds
-        c0 = b0 + b1;
-        c1 = b0 - b1;
         tmp2 = VALUE_0_541196100 * (b2 + b3);
-        c2 = VALUE_0_765366865 * b3 + tmp2;
-        c3 = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        mcu_array[matrix_zig_zag[0][column]] = (int16_t) ((b0 + b1) >> 3);
+        mcu_array[matrix_zig_zag[2][column]] = (int16_t) (((int32_t) (VALUE_0_765366865 * b3 + tmp2)) >> 3);
+        mcu_array[matrix_zig_zag[4][column]] = (int16_t) ((b0 - b1) >> 3);
+        mcu_array[matrix_zig_zag[6][column]] = (int16_t) (((int32_t) (VALUE_MINUS_1_847759065 * b2 + tmp2)) >> 3);
         c4 = b4 + b6;
         c5 = b7 - b5;
         c6 = b4 - b6;
         c7 = b5 + b7;
 
         // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
-        mcu_array[matrix_zig_zag[0][column]] = (int16_t) (c0 >> 3);
-        mcu_array[matrix_zig_zag[2][column]] = (int16_t) (c2 >> 3);
-        mcu_array[matrix_zig_zag[4][column]] = (int16_t) (c1 >> 3);
-        mcu_array[matrix_zig_zag[6][column]] = (int16_t) (c3 >> 3);
         mcu_array[matrix_zig_zag[1][column]] = (int16_t) ((c4 + c7) >> 3);
-        mcu_array[matrix_zig_zag[3][column]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
-        mcu_array[matrix_zig_zag[5][column]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[3][column]] = (int16_t) (((int32_t) (c5 * VALUE_1_414213562)) >> 3);
+        mcu_array[matrix_zig_zag[5][column]] = (int16_t) (((int32_t) (c6 * VALUE_1_414213562)) >> 3);
         mcu_array[matrix_zig_zag[7][column]] = (int16_t) ((c7 - c4) >> 3);
     }
 }
@@ -410,10 +407,10 @@ void dct_loeffler(uint8_t **bloc_spatiale, int16_t *mcu_array)
   // }
   // std::cout << "--- after copy of mcu_array --- " << std::endl;
 
-  cpu_dct_loeffler(bloc_spatiale, mcu_array);
+  //cpu_dct_loeffler(bloc_spatiale, mcu_array);
   // std::cout << "--- after cpu_dct_loeffler --- " << std::endl;
 
-  // gpu_dct_loeffler(bloc_spatiale, mcu_array_copy);
+  gpu_dct_loeffler(bloc_spatiale, mcu_array);
   // std::cout << "--- after gpu_dct_loeffler --- " << std::endl;
 
   // verify_result_dct(mcu_array, mcu_array_copy);
