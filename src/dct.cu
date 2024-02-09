@@ -244,20 +244,20 @@ __global__ void dct_kernel_better(uint8_t *bloc_spatiale, int16_t *output_mcu_ar
 
         // Stage 3 contains 3 mult + 9 adds
         tmp2 = VALUE_0_541196100 * (b2 + b3);
-        output_mcu_array[matrix_zig_zag[0][tx]] = (int16_t) ((b0 + b1) >> 3);
-        output_mcu_array[matrix_zig_zag[2][tx]] = (int16_t) ((VALUE_0_765366865 * b3 + tmp2) >> 3);
-        output_mcu_array[matrix_zig_zag[4][tx]] = (int16_t) ((b0 - b1) >> 3);
-        output_mcu_array[matrix_zig_zag[6][tx]] = (int16_t) ((VALUE_MINUS_1_847759065 * b2 + tmp2) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[0][tx]] = (int16_t) ((b0 + b1) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[2][tx]] = (int16_t) ((VALUE_0_765366865 * b3 + tmp2) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[4][tx]] = (int16_t) ((b0 - b1) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[6][tx]] = (int16_t) ((VALUE_MINUS_1_847759065 * b2 + tmp2) >> 3);
         c4 = b4 + b6;
         c5 = b7 - b5;
         c6 = b4 - b6;
         c7 = b5 + b7;
 
         // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
-        output_mcu_array[matrix_zig_zag[1][tx]] = (int16_t) ((c4 + c7) >> 3);
-        output_mcu_array[matrix_zig_zag[3][tx]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
-        output_mcu_array[matrix_zig_zag[5][tx]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
-        output_mcu_array[matrix_zig_zag[7][tx]] = (int16_t) ((c7 - c4) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[1][tx]] = (int16_t) ((c4 + c7) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[3][tx]] = (int16_t) (((int16_t) (c5 * VALUE_1_414213562)) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[5][tx]] = (int16_t) (((int16_t) (c6 * VALUE_1_414213562)) >> 3);
+        output_mcu_array[cuda_matrix_zig_zag[7][tx]] = (int16_t) ((c7 - c4) >> 3);
     }
 }
 
