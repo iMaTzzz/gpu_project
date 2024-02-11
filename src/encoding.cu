@@ -181,12 +181,12 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x + threadIdx.x * 8 + threadIdx.y; 
     uint32_t thread_id_in_block = threadIdx.x * 8 + threadIdx.y;
 
-    if (index_in_mcu_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64)
+    if (index_in_mcus_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64)
     {
         if (luminance)
-            mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_Y[thread_id_in_block];
+            mcus_line_array[index_in_mcus_array] /= cuda_quantification_table_Y[thread_id_in_block];
         else
-            mcus_line_array[index_in_mcu_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
+            mcus_line_array[index_in_mcus_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
     }
 }
 
@@ -196,7 +196,7 @@ extern "C" void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool 
     const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
 
     // Allocate memory on the device
-    int32_t *d_mcus_line_array;
+    int16_t *d_mcus_line_array;
     cudaMalloc(&d_mcus_line_array, array_size);
 
     // Copy data from the host to the device (CPU -> GPU)
