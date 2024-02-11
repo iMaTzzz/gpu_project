@@ -82,11 +82,11 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     // check if within bounds
     // if (x < (nb_mcu_line - 1) * 8 + 8 && y < (nb_mcu_line - 1) * 8 + 8) {
     // We only compute 1D DCT on 8 threads per block, the remaining 56 threads remain idle
+    int32_t a0, a1, a2, a3, a4, a5, a6, a7;
+    int32_t b0, b1, b2, b3, b4, b5, b6, b7;
+    int32_t c4, c5, c6, c7;
+    int32_t tmp0, tmp1, tmp2;
     if (tx == 0 && ty < 8) {
-        int32_t a0, a1, a2, a3, a4, a5, a6, a7;
-        int32_t b0, b1, b2, b3, b4, b5, b6, b7;
-        int32_t c4, c5, c6, c7;
-        int32_t tmp0, tmp1, tmp2;
         /* Row-wise DCT */
         // We add block_offset to move to the correct block and the threadIdx.y corresponds to one of the 8 rows. 
         // Each thread is assigned to a row in a block which corresponds to their id
