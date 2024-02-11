@@ -74,6 +74,7 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     /******** DCT + zig zag ********/
     // temporary data structure used by all threads within a block
     __shared__ int32_t shared_block[8][8];
+    __shared__ int16_t output_shared_block[64];
     uint32_t tx = threadIdx.x;
     uint32_t ty = threadIdx.y;
     uint32_t block_offset = blockIdx.x * blockDim.x;
@@ -158,36 +159,38 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
 
         // Stage 3 contains 3 mult + 9 adds
         tmp2 = VALUE_0_541196100 * (b2 + b3);
-        mcus_line_array[cuda_matrix_zig_zag[0][ty]] = (int16_t)((b0 + b1) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[2][ty]] = (int16_t)(((int32_t)(VALUE_0_765366865 * b3 + tmp2)) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[4][ty]] = (int16_t)((b0 - b1) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[6][ty]] = (int16_t)(((int32_t)(VALUE_MINUS_1_847759065 * b2 + tmp2)) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[0][ty]] = (int16_t)((b0 + b1) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[2][ty]] = (int16_t)(((int32_t)(VALUE_0_765366865 * b3 + tmp2)) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[4][ty]] = (int16_t)((b0 - b1) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[6][ty]] = (int16_t)(((int32_t)(VALUE_MINUS_1_847759065 * b2 + tmp2)) >> 3);
         c4 = b4 + b6;
         c5 = b7 - b5;
         c6 = b4 - b6;
         c7 = b5 + b7;
 
         // Stage 4 contains 2 mults + 2 adds + 8 normalized shifts (multiply by 8)
-        mcus_line_array[cuda_matrix_zig_zag[1][ty]] = (int16_t)((c4 + c7) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[3][ty]] = (int16_t)(((int32_t)(c5 * VALUE_1_414213562)) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[5][ty]] = (int16_t)(((int32_t)(c6 * VALUE_1_414213562)) >> 3);
-        mcus_line_array[cuda_matrix_zig_zag[7][ty]] = (int16_t)((c7 - c4) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[1][ty]] = (int16_t)((c4 + c7) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[3][ty]] = (int16_t)(((int32_t)(c5 * VALUE_1_414213562)) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[5][ty]] = (int16_t)(((int32_t)(c6 * VALUE_1_414213562)) >> 3);
+        output_shared_block[cuda_matrix_zig_zag[7][ty]] = (int16_t)((c7 - c4) >> 3);
     }
 
 
     /******** quantify ********/
-    //uint32_t index_in_mcu_line_array = blockIdx.x * (blockDim.y * blockDim.x) + threadIdx.y * blockDim.x + threadIdx.x;
-    //uint32_t thread_id_in_block = threadIdx.y * blockDim.x + threadIdx.x;
-    uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x + threadIdx.x * 8 + threadIdx.y; 
     uint32_t thread_id_in_block = threadIdx.x * 8 + threadIdx.y;
 
-    if (index_in_mcus_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64)
+    if (tx < 8 && ty < 8)
     {
-        if (luminance)
-            mcus_line_array[index_in_mcus_line_array] /= cuda_quantification_table_Y[thread_id_in_block];
-        else
-            mcus_line_array[index_in_mcus_line_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
+        if (luminance) {
+            output_shared_block[thread_id_in_block] /= cuda_quantification_table_Y[thread_id_in_block];
+        }
+        else {
+            output_shared_block[thread_id_in_block] /= cuda_quantification_table_CbCr[thread_id_in_block];
+        }
     }
+    // Copy the output located in the shared block into the mcus_line_array
+    uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x + thread_id_in_block;
+    mcus_line_array[index_in_mcus_line_array] = output_shared_block[thread_id_in_block];
 }
 
 void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
