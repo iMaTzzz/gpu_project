@@ -129,10 +129,12 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
         shared_block[ty][3] = c5 * VALUE_1_414213562;
         shared_block[ty][5] = c6 * VALUE_1_414213562;
         shared_block[ty][7] = c7 - c4;
+    }
 
-        // synchronize to ensure all threads have completed the row-wise DCT before doing the column-wise DCT
-        __syncthreads();
+    // synchronize to ensure all threads have completed the row-wise DCT before doing the column-wise DCT
+    __syncthreads();
 
+    if (tx == 0 && ty < 8) {
         /* Column-wise DCT */
         // ty == column => Each thread is assigned to a column in a block which corresponds to their id
         // Stage 1 contains 8 adds
