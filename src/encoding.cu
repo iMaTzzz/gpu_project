@@ -77,7 +77,7 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     __shared__ int16_t output_shared_block[64];
     uint32_t tx = threadIdx.x;
     uint32_t ty = threadIdx.y;
-    uint32_t block_offset = blockIdx.x * blockDim.x;
+    uint32_t block_offset = blockIdx.x * blockDim.x * blockDim.y;
 
     // check if within bounds
     // if (x < (nb_mcu_line - 1) * 8 + 8 && y < (nb_mcu_line - 1) * 8 + 8) {
