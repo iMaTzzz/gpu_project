@@ -8,7 +8,7 @@
 #include "rgb_to_ycbcr.h"
 #include "downsampling.h"
 #include "bitstream.h"
-#include "encoding.h"
+#include "encoding.cuh"
 
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
