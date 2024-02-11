@@ -8,7 +8,7 @@
 #include "rgb_to_ycbcr.h"
 #include "downsampling.h"
 #include "bitstream.h"
-#include "encoding.cuh"
+#include "encoding.h"
 
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
@@ -186,7 +186,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         // }
     // }
     /* On libère tous les espaces mémoire alloués. */
-    free_mcus_line_array(mcus_line_array, nb_mcu_line);
+    free(mcus_line_array);
     free(predicator);
     free(index);
 }
