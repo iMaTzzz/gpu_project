@@ -105,9 +105,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         encoding(mcus_line_array, nb_mcu_line, true);
         // Take result from GPU
         // Call coding from results of GPU
-        for (uint8_t mcu_index = 0; mcu_index < nb_mcu_line; ++mcu_index) {
-            coding(mcus_line_array + mcu_index * 64, ht_dc, ht_ac, stream, predicator, index);
-        }
+        coding_mcus_line(mcus_line_array, nb_mcu_line, ht_dc, ht_ac, stream, predicator, index);
     }
 
     // /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
