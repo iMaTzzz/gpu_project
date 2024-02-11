@@ -184,13 +184,13 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     if (index_in_mcus_line_array < (nb_mcu_line - 1) * 64 && thread_id_in_block < 64)
     {
         if (luminance)
-            mcus_line_array[index_in_mcus_array] /= cuda_quantification_table_Y[thread_id_in_block];
+            mcus_line_array[index_in_mcus_line_array] /= cuda_quantification_table_Y[thread_id_in_block];
         else
-            mcus_line_array[index_in_mcus_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
+            mcus_line_array[index_in_mcus_line_array] /= cuda_quantification_table_CbCr[thread_id_in_block];
     }
 }
 
-extern "C" void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
     // Give size to allocate on GPU
     const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
