@@ -174,6 +174,8 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
         output_shared_block[cuda_matrix_zig_zag[5][ty]] = (int16_t)(((int32_t)(c6 * VALUE_1_414213562)) >> 3);
         output_shared_block[cuda_matrix_zig_zag[7][ty]] = (int16_t)((c7 - c4) >> 3);
     }
+    // Wait for every threads before we can move onto the quantify step since 56 threads were idle
+    __syncthreads();
 
 
     /******** quantify ********/
