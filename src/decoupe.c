@@ -190,3 +190,10 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     free(predicator);
     free(index);
 }
+
+void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
+                        struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
+                        struct bitstream *stream, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
+{
+    // TODO
+}
