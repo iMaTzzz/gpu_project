@@ -5,6 +5,7 @@
 #include <math.h>
 #include <iostream>
 #include <assert.h>
+#include "encoding.h"
 
 /* Constantes utilisées dans les deux versions des algorithmes de Loeffler */
 #define VALUE_0_390180644 0.390180644
