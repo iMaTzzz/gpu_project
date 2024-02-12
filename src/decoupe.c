@@ -44,6 +44,10 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + 8 - width_remainder;
 
     int16_t *mcus_line_array = malloc(8 * mcus_line_array_width * sizeof(int16_t));
+    if (mcus_line_array == NULL) {
+        printf("malloc for mcus line array failed\n");
+        return EXIT_FAILURE;
+    }
 
     for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
         // Troncature en bas possible que sur la dernière ligne de MCU
