@@ -5,6 +5,15 @@ project(gpu_project LANGUAGES C CUDA)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -O2")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wall -Iinclude")
 
+# Define an option for enabling debug mode
+option(DEBUG_MODE "Enable debug mode" OFF)
+
+# Set compiler flags based on debug mode
+if(DEBUG_MODE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
+
 # Include directories
 include_directories(include)
 
