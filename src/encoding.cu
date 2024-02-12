@@ -199,12 +199,13 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
 
 void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
+    cudaError_t result;
     // Give size to allocate on GPU
     const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
 
     // Allocate memory on the device
     int16_t *d_mcus_line_array;
-    cudaError_t result = cudaMalloc(&d_mcus_line_array, array_size);
+    result = cudaMalloc(&d_mcus_line_array, array_size);
     if (result != cudaSuccess) {
         fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
         exit(EXIT_FAILURE);
@@ -221,7 +222,7 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
     // Acts a synchronization making sure all threads are done
     cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
 
-    cudaError_t result = cudaFree(d_mcus_line_array);
+    result = cudaFree(d_mcus_line_array);
     if (result != cudaSuccess) {
         fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
         exit(EXIT_FAILURE);
