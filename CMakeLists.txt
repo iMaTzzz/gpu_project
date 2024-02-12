@@ -75,3 +75,8 @@ link_directories(/usr/local/cuda/lib64)
 # Add clean target
 # set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OBJ_FILES};${CUDA_OBJ_FILES};ppm2jpeg")
 
+# Custom target for enabling debug mode
+add_custom_target(debug
+    COMMAND ${CMAKE_COMMAND} -DDEBUG_MODE=ON ${CMAKE_SOURCE_DIR}
+    COMMENT "Enabling debug mode"
+)
