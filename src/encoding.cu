@@ -78,7 +78,6 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     uint32_t tx = threadIdx.x;
     uint32_t ty = threadIdx.y;
     uint32_t block_offset = blockIdx.x * blockDim.x * blockDim.y;
-    printf("Dim x = %i, Dim y = %i\n", blockDim.x, blockDim.y);
 
     // check if within bounds
     // if (x < (nb_mcu_line - 1) * 8 + 8 && y < (nb_mcu_line - 1) * 8 + 8) {
@@ -194,7 +193,7 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
         }
     }
     // Copy the output located in the shared block into the mcus_line_array
-    uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x + thread_id_in_block;
+    uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x * blockDim.y + thread_id_in_block;
     mcus_line_array[index_in_mcus_line_array] = output_shared_block[thread_id_in_block];
 }
 
