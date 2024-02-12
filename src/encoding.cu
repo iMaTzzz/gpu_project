@@ -204,7 +204,8 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
     // Allocate memory on the device
     int16_t *d_mcus_line_array;
-    if (cudaMalloc(&d_mcus_line_array, array_size) != cudaSuccess) {
+    cudaError_t result = cudaMalloc(&d_mcus_line_array, array_size);
+    if (result != cudaSuccess) {
         fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
         exit(EXIT_FAILURE);
     }
@@ -220,7 +221,8 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
     // Acts a synchronization making sure all threads are done
     cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
 
-    if (cudaFree(d_mcus_line_array) != cudaSuccess) {
+    cudaError_t result = cudaFree(d_mcus_line_array);
+    if (result != cudaSuccess) {
         fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
         exit(EXIT_FAILURE);
     }
