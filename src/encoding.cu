@@ -39,6 +39,16 @@
 #define VALUE_MINUS_0_923879533 -0.923879533 // -cos(pi/8)
 #define VALUE_MINUS_0_785694958 -0.785694958 // sin(pi/16) - cos(pi/16)
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 __constant__ uint8_t cuda_matrix_zig_zag[8][8] = {
     {0, 1, 5, 6, 14, 15, 27, 28},
     {2, 4, 7, 13, 16, 26, 29, 42},
@@ -199,40 +209,24 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
 
 void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 {
-    cudaError_t result;
     // Give size to allocate on GPU
     const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
 
     // Allocate memory on the device
     int16_t *d_mcus_line_array;
-    result = cudaMalloc(&d_mcus_line_array, array_size);
-    if (result != cudaSuccess) {
-        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
-        exit(EXIT_FAILURE);
-    }
+    gpuErrchk(cudaMalloc(&d_mcus_line_array, array_size));
 
     // Copy data from the host to the device (CPU -> GPU)
-    result = cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice);
-    if (result != cudaSuccess) {
-        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
-        exit(EXIT_FAILURE);
-    }
+    gpuErrchk(cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice));
 
     const dim3 block_size(8, 8);
     const dim3 grid_size(nb_mcu_line);
     encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t)luminance);
+    gpuErrchk(cudaPeekAtLastError());
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
-    result = cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
-    if (result != cudaSuccess) {
-        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
-        exit(EXIT_FAILURE);
-    }
+    gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
 
-    result = cudaFree(d_mcus_line_array);
-    if (result != cudaSuccess) {
-        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
-        exit(EXIT_FAILURE);
-    }
+    gpuAssert(cudaFree(d_mcus_line_array));
 }
