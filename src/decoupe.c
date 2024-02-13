@@ -143,7 +143,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + width_mcu - width_remainder;
 
     // Tableau des MCUs qui contient toutes les composantes dans l'ordre séquentiel de l'encodage
-    int16_t *mcus_line_array = malloc(height_mcu * mcus_line_array_width * sizeof(int16_t));
+    int16_t *mcus_line_array = malloc(height_mcu * mcus_line_array_width* 3 * sizeof(int16_t));
     if (mcus_line_array == NULL) {
         printf("malloc for mcus line array failed\n");
         exit(EXIT_FAILURE);
