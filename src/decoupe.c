@@ -84,7 +84,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 }
 
             }
-
+/*
             // print MCUs line
             for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
                 // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
@@ -98,9 +98,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 printf("\n\n");
                 mcu_index++;
             }
-
+*/
             // for debugging bottom troncature of MCUs (but not both bottom & right troncatures)
-            exit(3);
+            // exit(3);
 
             // Puis on copie la dernière ligne de pixels présente dans l'image dans les lignes manquantes
             for (uint8_t line_offset = height_remainder; line_offset < 8; ++line_offset) {
@@ -142,6 +142,21 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 }
             }
         }
+
+        // print MCUs line
+        for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+            // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+            mcu_index++;
+        }
+
 
 /*
         // print MCUs line
