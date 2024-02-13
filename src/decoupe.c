@@ -121,6 +121,20 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 }
             }
 
+            // print MCUs line
+            for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+                // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                    }
+                    printf("\n");
+                }
+                printf("\n\n");
+                mcu_index++;
+            }
+
         } else { // Pas de troncature vers le bas ou on ne se trouve pas sur la dernière ligne de MCU
             for (uint8_t line = 0; line < 8; ++line) {
                 uint32_t column;
@@ -141,20 +155,21 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
-        }
 
-        // print MCUs line
-        for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
-            // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+            // print MCUs line
+            for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+                // printf("mcu number %d (mcu line number %d)\n", mcu_index, mcu_line);
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
+                printf("\n\n");
+                mcu_index++;
             }
-            printf("\n\n");
-            mcu_index++;
+
         }
 
 
