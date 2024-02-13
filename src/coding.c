@@ -182,5 +182,5 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
             // printf("value = endofblock, huffman_path = %i, nb_bits = %hhu\n", path, nb_bits);
         }
     }
-    printf("Coding mcus line done\n");
+    // printf("Coding mcus line done\n");
 }

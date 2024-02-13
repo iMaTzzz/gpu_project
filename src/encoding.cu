@@ -221,17 +221,17 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
     const dim3 block_size(8, 8);
     const dim3 grid_size(nb_mcu_line);
-    printf("Encoding in GPU starting\n");
+    // printf("Encoding in GPU starting\n");
     encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t)luminance);
-    printf("Encoding in GPU done\n");
+    // printf("Encoding in GPU done\n");
     gpuErrchk(cudaPeekAtLastError());
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
-    printf("Starting copy from GPU to CPU\n");
+    // printf("Starting copy from GPU to CPU\n");
     gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
-    printf("Copy from GPU to CPU done\n");
+    // printf("Copy from GPU to CPU done\n");
 
     gpuErrchk(cudaFree(d_mcus_line_array));
-    printf("CudaFree done\n");
+    // printf("CudaFree done\n");
 }
