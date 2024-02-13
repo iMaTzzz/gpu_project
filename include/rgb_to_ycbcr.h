@@ -7,4 +7,4 @@
  
  * Return : Y ou Cb ou Cr selon le enum
 */
-extern void rgb_to_ycbcr(uint8_t red, uint8_t green, uint8_t blue, uint8_t *Y, uint8_t *Cb, uint8_t *Cr)
+extern void rgb_to_ycbcr(uint8_t red, uint8_t green, uint8_t blue, uint8_t *Y, uint8_t *Cb, uint8_t *Cr);
