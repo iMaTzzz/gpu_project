@@ -212,7 +212,11 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
     }
 
     // Copy data from the host to the device (CPU -> GPU)
-    cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice);
+    result = cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice);
+    if (result != cudaSuccess) {
+        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
+        exit(EXIT_FAILURE);
+    }
 
     const dim3 block_size(8, 8);
     const dim3 grid_size(nb_mcu_line);
@@ -220,7 +224,11 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
-    cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
+    result = cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost);
+    if (result != cudaSuccess) {
+        fprintf(stderr, "%s:%d error: %s\n", __FILE__, __LINE__, cudaGetErrorString(result));
+        exit(EXIT_FAILURE);
+    }
 
     result = cudaFree(d_mcus_line_array);
     if (result != cudaSuccess) {
