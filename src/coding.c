@@ -125,7 +125,7 @@ void coding(int16_t *bloc_array, struct huff_table *ht_dc, struct huff_table *ht
 void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct huff_table *ht_dc, struct huff_table *ht_ac,
                       struct bitstream *stream, int16_t *predicator, uint16_t *index)
 {
-    for (uint8_t mcu_index = 0; mcu_index < nb_mcus_line; ++mcu_index) {
+    for (uint32_t mcu_index = 0; mcu_index < nb_mcus_line; ++mcu_index) {
         printf("Mcu index = %u\n", mcu_index);
         uint64_t offset = 64 * mcu_index; 
         /* On encode d'abord le coefficient DC */
