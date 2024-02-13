@@ -228,5 +228,5 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
     // Acts a synchronization making sure all threads are done
     gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
 
-    gpuAssert(cudaFree(d_mcus_line_array));
+    gpuErrchk(cudaFree(d_mcus_line_array));
 }
