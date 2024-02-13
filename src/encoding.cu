@@ -228,7 +228,10 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
+    printf("Starting copy from GPU to CPU\n");
     gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
+    printf("Copy from GPU to CPU done\n");
 
     gpuErrchk(cudaFree(d_mcus_line_array));
+    printf("CudaFree done\n");
 }
