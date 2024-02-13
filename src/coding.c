@@ -126,7 +126,8 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
                       struct bitstream *stream, int16_t *predicator, uint16_t *index)
 {
     for (uint8_t mcu_index = 0; mcu_index < nb_mcus_line; ++mcu_index) {
-        uint64_t offset = 64 * mcu_index;  
+        printf("Mcu index = %u\n", mcu_index);
+        uint64_t offset = 64 * mcu_index; 
         /* On encode d'abord le coefficient DC */
         uint8_t magnitude_dc = magnitude(mcus_line_array[offset + 0] - *predicator);
         index_in_magnitude(mcus_line_array[offset + 0] - *predicator, magnitude_dc, index);
@@ -182,4 +183,5 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
             // printf("value = endofblock, huffman_path = %i, nb_bits = %hhu\n", path, nb_bits);
         }
     }
+    printf("Coding mcus line done\n");
 }
