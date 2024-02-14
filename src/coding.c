@@ -122,20 +122,20 @@ void coding(int16_t *bloc_array, struct huff_table *ht_dc, struct huff_table *ht
     }
 }
 
-void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct huff_table *ht_dc, struct huff_table *ht_ac,
+void coding_mcus(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc, struct huff_table *ht_ac,
                       struct bitstream *stream, int16_t *predicator, uint16_t *index)
 {
     uint64_t offset = 0; 
-    for (uint32_t mcu_index = 0; mcu_index < nb_mcus_line; ++mcu_index) {
+    for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
         /* On encode d'abord le coefficient DC */
-        uint8_t magnitude_dc = magnitude(mcus_line_array[offset + 0] - *predicator);
-        index_in_magnitude(mcus_line_array[offset + 0] - *predicator, magnitude_dc, index);
+        uint8_t magnitude_dc = magnitude(mcus_array[offset + 0] - *predicator);
+        index_in_magnitude(mcus_array[offset + 0] - *predicator, magnitude_dc, index);
         uint8_t nb_bits;
         uint32_t path = huffman_table_get_path(ht_dc, magnitude_dc, &nb_bits);
         /* On écrit dans le bitstream le chemin de huffman de la magnitude puis l'indice de la valeur */
         bitstream_write_bits(stream, path, nb_bits, 0);
         bitstream_write_bits(stream, *index, magnitude_dc, 0);
-        *predicator = mcus_line_array[offset + 0];
+        *predicator = mcus_array[offset + 0];
         // printf("value = %i, magnitude = %i, index = %hu, path  = %u\n,
         //         nb_bits = %hhu\n", array[0] - *predicator, magnitude_dc, *index, path, magnitude_dc);
 
@@ -143,7 +143,7 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
         uint8_t count_zero = 0;
         for (uint8_t i = 1; i < 64; i++)
         {
-            if (mcus_line_array[offset + i] == 0)
+            if (mcus_array[offset + i] == 0)
             {
                 /* Si le coefficient est nul, on incrémente le compteur de zero */
                 count_zero++;
@@ -162,12 +162,12 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
                     }
                 }
                 /* On encode maintenant le code RLE du coefficient puis l'indice du coefficient */
-                uint8_t magnitude_ac = magnitude(mcus_line_array[offset + i]);
+                uint8_t magnitude_ac = magnitude(mcus_array[offset + i]);
                 uint8_t RLE = code_RLE(count_zero, magnitude_ac);
                 uint32_t path = huffman_table_get_path(ht_ac, RLE, &nb_bits);
                 bitstream_write_bits(stream, path, nb_bits, 0);
 
-                index_in_magnitude(mcus_line_array[offset + i], magnitude_ac, index);
+                index_in_magnitude(mcus_array[offset + i], magnitude_ac, index);
                 bitstream_write_bits(stream, *index, magnitude_ac, 0);
                 // printf("value = %i, magnitude = %i, index = %hhu\n", array[i], magnitude_ac, *index);
                 // printf("RLE code = %i, huffman path = %u, nb_bits = %hhu\n", RLE, path, nb_bits);
@@ -185,17 +185,17 @@ void coding_mcus_line(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct hu
     }
 }
 
-static void coding_mcus_line_per_component(int16_t *mcus_line_array, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream, int16_t *predicator, uint16_t *index, uint64_t offset)
+static void coding_mcus_per_component(int16_t *mcus_array, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream, int16_t *predicator, uint16_t *index, uint64_t offset)
 {
     /* On encode d'abord le coefficient DC */
-    uint8_t magnitude_dc = magnitude(mcus_line_array[offset + 0] - *predicator);
-    index_in_magnitude(mcus_line_array[offset + 0] - *predicator, magnitude_dc, index);
+    uint8_t magnitude_dc = magnitude(mcus_array[offset + 0] - *predicator);
+    index_in_magnitude(mcus_array[offset + 0] - *predicator, magnitude_dc, index);
     uint8_t nb_bits;
     uint32_t path = huffman_table_get_path(ht_dc, magnitude_dc, &nb_bits);
     /* On écrit dans le bitstream le chemin de huffman de la magnitude puis l'indice de la valeur */
     bitstream_write_bits(stream, path, nb_bits, 0);
     bitstream_write_bits(stream, *index, magnitude_dc, 0);
-    *predicator = mcus_line_array[offset + 0];
+    *predicator = mcus_array[offset + 0];
     // printf("value = %i, magnitude = %i, index = %hu, path  = %u\n,
     //         nb_bits = %hhu\n", array[0] - *predicator, magnitude_dc, *index, path, magnitude_dc);
 
@@ -203,7 +203,7 @@ static void coding_mcus_line_per_component(int16_t *mcus_line_array, struct huff
     uint8_t count_zero = 0;
     for (uint8_t i = 1; i < 64; i++)
     {
-        if (mcus_line_array[offset + i] == 0)
+        if (mcus_array[offset + i] == 0)
         {
             /* Si le coefficient est nul, on incrémente le compteur de zero */
             count_zero++;
@@ -222,12 +222,12 @@ static void coding_mcus_line_per_component(int16_t *mcus_line_array, struct huff
                 }
             }
             /* On encode maintenant le code RLE du coefficient puis l'indice du coefficient */
-            uint8_t magnitude_ac = magnitude(mcus_line_array[offset + i]);
+            uint8_t magnitude_ac = magnitude(mcus_array[offset + i]);
             uint8_t RLE = code_RLE(count_zero, magnitude_ac);
             uint32_t path = huffman_table_get_path(ht_ac, RLE, &nb_bits);
             bitstream_write_bits(stream, path, nb_bits, 0);
 
-            index_in_magnitude(mcus_line_array[offset + i], magnitude_ac, index);
+            index_in_magnitude(mcus_array[offset + i], magnitude_ac, index);
             bitstream_write_bits(stream, *index, magnitude_ac, 0);
             // printf("value = %i, magnitude = %i, index = %hhu\n", array[i], magnitude_ac, *index);
             // printf("RLE code = %i, huffman path = %u, nb_bits = %hhu\n", RLE, path, nb_bits);
@@ -243,21 +243,21 @@ static void coding_mcus_line_per_component(int16_t *mcus_line_array, struct huff
     }
 }
 
-void coding_mcus_line_Y_Cb_Cr(int16_t *mcus_line_array, uint32_t nb_mcus_line, struct huff_table *ht_dc_Y,
+void coding_mcus_Y_Cb_Cr(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc_Y,
                               struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C,
                               struct bitstream *stream, int16_t *predicator_Y, int16_t *predicator_Cb,
                               int16_t *predicator_Cr, uint16_t *index)
 {
     uint64_t offset = 0; 
-    for (uint32_t mcu_index = 0; mcu_index < nb_mcus_line; ++mcu_index) {
+    for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
         // Y
-        coding_mcus_line_per_component(mcus_line_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index, offset);
+        coding_mcus_per_component(mcus_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index, offset);
         offset += 64;
         // Cb
-        coding_mcus_line_per_component(mcus_line_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index, offset);
+        coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index, offset);
         offset += 64;
         // Cr
-        coding_mcus_line_per_component(mcus_line_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index, offset);
+        coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index, offset);
         offset += 64;
     }
 }

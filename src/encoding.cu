@@ -79,7 +79,7 @@ __constant__ uint8_t cuda_quantification_table_CbCr[] = {
     0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e,
     0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e};
 
-__global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uint8_t luminance)
+__global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
 {
     /******** DCT + zig zag ********/
     // temporary data structure used by all threads within a block
@@ -89,8 +89,6 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     uint32_t ty = threadIdx.y;
     uint32_t block_offset = blockIdx.x * blockDim.x * blockDim.y;
 
-    // check if within bounds
-    // if (x < (nb_mcu_line - 1) * 8 + 8 && y < (nb_mcu_line - 1) * 8 + 8) {
     // We only compute 1D DCT on 8 threads per block, the remaining 56 threads remain idle
     int32_t a0, a1, a2, a3, a4, a5, a6, a7;
     int32_t b0, b1, b2, b3, b4, b5, b6, b7;
@@ -102,14 +100,14 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
         // Each thread is assigned to a row in a block which corresponds to their id
         uint32_t offset = block_offset + ty * 8;
         // Stage 1 contains 8 adds (+ 4 offsets)
-        a0 = (int32_t)(mcus_line_array[offset + 0] + mcus_line_array[offset + 7] - 256);
-        a1 = (int32_t)(mcus_line_array[offset + 1] + mcus_line_array[offset + 6] - 256);
-        a2 = (int32_t)(mcus_line_array[offset + 2] + mcus_line_array[offset + 5] - 256);
-        a3 = (int32_t)(mcus_line_array[offset + 3] + mcus_line_array[offset + 4] - 256);
-        a4 = (int32_t)(mcus_line_array[offset + 3] - mcus_line_array[offset + 4]);
-        a5 = (int32_t)(mcus_line_array[offset + 2] - mcus_line_array[offset + 5]);
-        a6 = (int32_t)(mcus_line_array[offset + 1] - mcus_line_array[offset + 6]);
-        a7 = (int32_t)(mcus_line_array[offset + 0] - mcus_line_array[offset + 7]);
+        a0 = (int32_t)(d_mcus_array[offset + 0] + d_mcus_array[offset + 7] - 256);
+        a1 = (int32_t)(d_mcus_array[offset + 1] + d_mcus_array[offset + 6] - 256);
+        a2 = (int32_t)(d_mcus_array[offset + 2] + d_mcus_array[offset + 5] - 256);
+        a3 = (int32_t)(d_mcus_array[offset + 3] + d_mcus_array[offset + 4] - 256);
+        a4 = (int32_t)(d_mcus_array[offset + 3] - d_mcus_array[offset + 4]);
+        a5 = (int32_t)(d_mcus_array[offset + 2] - d_mcus_array[offset + 5]);
+        a6 = (int32_t)(d_mcus_array[offset + 1] - d_mcus_array[offset + 6]);
+        a7 = (int32_t)(d_mcus_array[offset + 0] - d_mcus_array[offset + 7]);
 
         // Stage 2 contains 6 mult + 10 adds
         b0 = a0 + a3;
@@ -203,26 +201,26 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
         }
     }
     // Copy the output located in the shared block into the mcus_line_array
-    uint32_t index_in_mcus_line_array = blockIdx.x * blockDim.x * blockDim.y + thread_id_in_block;
-    mcus_line_array[index_in_mcus_line_array] = output_shared_block[thread_id_in_block];
+    uint32_t index_in_mcus_array = blockIdx.x * blockDim.x * blockDim.y + thread_id_in_block;
+    d_mcus_array[index_in_mcus_array] = output_shared_block[thread_id_in_block];
 }
 
-void encoding(int16_t *h_mcus_line_array, int16_t *d_mcus_line_array, uint32_t nb_mcus_line, size_t array_size, bool luminance)
+void encoding(int16_t *h_mcus_array, int16_t *d_mcus_array, uint32_t nb_mcus, size_t array_size, bool luminance)
 {
     // Copy data from the host to the device (CPU -> GPU)
     gpuErrchk(cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice));
 
     const dim3 block_size(8, 8);
-    const dim3 grid_size(nb_mcus_line);
+    const dim3 grid_size(nb_mcus);
     // printf("Encoding in GPU starting\n");
-    encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcus_line, (uint8_t)luminance);
+    encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, (uint8_t)luminance);
     // printf("Encoding in GPU done\n");
     gpuErrchk(cudaPeekAtLastError());
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
     // printf("Starting copy from GPU to CPU\n");
-    gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(h_mcus_array, d_mcus_array, array_size, cudaMemcpyDeviceToHost));
     // printf("Copy from GPU to CPU done\n");
 
 }
