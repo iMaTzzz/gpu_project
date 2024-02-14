@@ -239,9 +239,13 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
                     uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
-                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y_comp, &Cb_comp, &Cr_comp);
-                    printf("Y: %d -- Cb: %d -- Cr: %d\n", Y_comp, Cb_comp, Cr_comp);
-                    exit(3);
+                    uint8_t red = fgetc(image);
+                    uint8_t green = fgetc(image);
+                    uint8_t blue = fgetc(image);
+                    rgb_to_ycbcr(red, green, blue, &Y_comp, &Cb_comp, &Cr_comp);
+                    // rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y_comp, &Cb_comp, &Cr_comp);
+                    // printf("Y: %d -- Cb: %d -- Cr: %d\n", Y_comp, Cb_comp, Cr_comp);
+                    // exit(3);
                     mcus_line_array[mcu_pixel] = Y_comp; // Y
                     mcus_line_array[mcu_pixel + 64] = Cb_comp; // Cb
                     mcus_line_array[mcu_pixel + 128] = Cr_comp; // Cr
@@ -569,8 +573,8 @@ void treat_image_color_o(FILE *image, uint32_t width, uint32_t height, struct hu
                         mcu_Y[k][l] = rgb_to_ycbc_old(red, green, blue, Y);
                         mcu_Cb[k][l] = rgb_to_ycbc_old(red, green, blue, Cb);
                         mcu_Cr[k][l] = rgb_to_ycbc_old(red, green, blue, Cr);
-                        printf("Y: %d -- Cb: %d -- Cr: %d \n", mcu_Y[k][l], mcu_Cb[k][l], mcu_Cr[k][l]);
-                        exit(3);
+                        // printf("Y: %d -- Cb: %d -- Cr: %d \n", mcu_Y[k][l], mcu_Cb[k][l], mcu_Cr[k][l]);
+                        // exit(3);
                         // printf("%ld\n", ftell(image));
                     }
                 }
