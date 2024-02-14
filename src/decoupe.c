@@ -158,6 +158,11 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint8_t Cb;
     uint8_t Cr;
 
+    printf("h1: %d -- v1: %d\n", h1, v1);
+    printf("h2: %d -- v2: %d\n", h2, v2);
+    printf("h3: %d -- v3: %d\n", h3, v3);
+
+    uint32_t mcu_index = 0;
 
     for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
         // Troncature en bas possible que sur la dernière ligne de MCU
@@ -238,13 +243,49 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     }
                 }
             }
+
         }
+
+        // print MCUs line
+        for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+            printf("--- mcu y ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+
+            printf("--- mcu Cb ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_line_array[i_mcu * 64 + 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+
+            printf("--- mcu Cr ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_line_array[i_mcu * 64 + 128 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+            mcu_index++;
+        }
+
         // TODO
         // Call GPU
-        encoding(mcus_line_array, nb_mcu_line * 3, true); // mcus_line_array_size = 3 * nb_mcu_line car il y a 3 composantes
+        // encoding(mcus_line_array, nb_mcu_line * 3, true); // mcus_line_array_size = 3 * nb_mcu_line car il y a 3 composantes
         // Take result from GPU
         // Call coding from results of GPU
-        coding_mcus_line_Y_Cb_Cr(mcus_line_array, nb_mcu_line, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
+        // coding_mcus_line_Y_Cb_Cr(mcus_line_array, nb_mcu_line, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
     }
 
     // OLD
