@@ -127,6 +127,7 @@ void coding_mcus(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc
 {
     uint64_t offset = 0; 
     for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
+        printf("coding mcu index: %u\n", mcu_index);
         /* On encode d'abord le coefficient DC */
         uint8_t magnitude_dc = magnitude(mcus_array[offset + 0] - *predicator);
         index_in_magnitude(mcus_array[offset + 0] - *predicator, magnitude_dc, index);

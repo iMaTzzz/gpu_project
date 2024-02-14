@@ -222,5 +222,4 @@ void encoding(int16_t *h_mcus_array, int16_t *d_mcus_array, uint32_t nb_mcus, si
     // printf("Starting copy from GPU to CPU\n");
     gpuErrchk(cudaMemcpy(h_mcus_array, d_mcus_array, array_size, cudaMemcpyDeviceToHost));
     // printf("Copy from GPU to CPU done\n");
-
 }
