@@ -273,7 +273,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 printf("mcu number %d\n", mcu_index);
                 for (uint8_t i = 0; i < 8; i++) {
                     for (uint8_t j = 0; j < 8; j++) {
-                        printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                        printf("%d ", mcus_line_array[i_mcu * 3 * 64 + i * 8 + j]);
                     }
                     printf("\n");
                 }
@@ -283,7 +283,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 printf("mcu number %d\n", mcu_index);
                 for (uint8_t i = 0; i < 8; i++) {
                     for (uint8_t j = 0; j < 8; j++) {
-                        printf("%d ", mcus_line_array[i_mcu * 64 + 64 + i * 8 + j]);
+                        printf("%d ", mcus_line_array[i_mcu * 3 * 64 + 64 + i * 8 + j]);
                     }
                     printf("\n");
                 }
@@ -293,7 +293,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 printf("mcu number %d\n", mcu_index);
                 for (uint8_t i = 0; i < 8; i++) {
                     for (uint8_t j = 0; j < 8; j++) {
-                        printf("%d ", mcus_line_array[i_mcu * 64 + 128 + i * 8 + j]);
+                        printf("%d ", mcus_line_array[i_mcu * 3 * 64 + 128 + i * 8 + j]);
                     }
                     printf("\n");
                 }
