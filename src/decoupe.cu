@@ -211,6 +211,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
     printf("nb mcus allocated: %u\n", nb_mcus_allocated);
 
+    uint32_t mcu_index = 0;
+
     for (uint16_t nb_alloc = 0; nb_alloc < nb_mcu_column / nb_mcus_line_allocated; ++nb_alloc) {
         // printf("Current number alloc: %u\n", nb_alloc);
         for (uint32_t mcu_line = 0; mcu_line < nb_mcus_line_allocated && nb_alloc * nb_mcus_line_allocated + mcu_line < nb_mcu_column; mcu_line++) {
@@ -305,6 +307,42 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
 
         // Call GPU
         encoding(mcus_array, d_mcus_array, nb_mcus_allocated*3, mcus_array_size, true);
+
+        // print MCUs line
+        for (uint32_t i_mcu = 0; i_mcu < nb_mcus_allocated; ++i_mcu) {
+            printf("--- mcu Y ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_array[i_mcu * 3 * 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+
+            printf("--- mcu Cb ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_array[i_mcu * 3 * 64 + 64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+
+            printf("--- mcu Cr ---\n");
+            printf("mcu number %d\n", mcu_index);
+            for (uint8_t i = 0; i < 8; i++) {
+                for (uint8_t j = 0; j < 8; j++) {
+                    printf("%d ", mcus_array[i_mcu * 3 * 64 + 128 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+            printf("\n\n");
+
+            mcu_index++;
+        }
+
         // Take result from GPU
         // Call coding from results of GPU
         coding_mcus_Y_Cb_Cr(mcus_array, nb_mcus_allocated, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
