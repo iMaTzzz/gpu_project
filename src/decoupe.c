@@ -254,6 +254,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint8_t red;
     uint8_t green;
     uint8_t blue;
+
+    uint32_t mcu_index = 0;
+
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
     for (uint32_t i = 0; i < line_mcu; i++) {
         //printf("i = %i\n", i);
@@ -338,6 +341,17 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
+
+                    printf("--- mcu Y ---\n");
+                    printf("mcu number %d\n", mcu_index);
+                    for (uint8_t i = 0; i < 8; i++) {
+                        for (uint8_t j = 0; j < 8; j++) {
+                            printf("%d ", bloc_array[i * 8 + j]);
+                        }
+                        printf("\n");
+                    }
+                    printf("\n\n");
+
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index); // On encode le bloc.
                 }
@@ -364,6 +378,17 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
+
+                    printf("--- mcu Cb ---\n");
+                    printf("mcu number %d\n", mcu_index);
+                    for (uint8_t i = 0; i < 8; i++) {
+                        for (uint8_t j = 0; j < 8; j++) {
+                            printf("%d ", bloc_array[i * 8 + j]);
+                        }
+                        printf("\n");
+                    }
+                    printf("\n\n");
+
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index); // On encode le bloc.
                 }
@@ -391,10 +416,23 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     dct_loeffler_better(bloc, bloc_array);
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
+
+                    printf("--- mcu Cr ---\n");
+                    printf("mcu number %d\n", mcu_index);
+                    for (uint8_t i = 0; i < 8; i++) {
+                        for (uint8_t j = 0; j < 8; j++) {
+                            printf("%d ", bloc_array[i * 8 + j]);
+                        }
+                        printf("\n");
+                    }
+                    printf("\n\n");
+
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index); // On encode le bloc.
                 }
             }
+
+            mcu_index++;
             
             /* Si on n'est pas sur une MCU de la dernière colonne */
             if (j != column_mcu - 1) {
