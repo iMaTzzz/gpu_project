@@ -4,7 +4,7 @@ extern "C" {
 
 #include <stdint.h>
 
-void encoding(int16_t *mcus_line_array, uint32_t mcus_line_array_size, bool luminance);
+void encoding(int16_t *h_mcus_line_array, int16_t *d_mcus_line_array, uint32_t nb_mcus_line, size_t array_size ,bool luminance);
 
 #ifdef __cplusplus
 }

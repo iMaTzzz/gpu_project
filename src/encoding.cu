@@ -207,22 +207,15 @@ __global__ void encoding_gpu(int16_t *mcus_line_array, uint32_t nb_mcu_line, uin
     mcus_line_array[index_in_mcus_line_array] = output_shared_block[thread_id_in_block];
 }
 
-void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
+void encoding(int16_t *h_mcus_line_array, int16_t *d_mcus_line_array, uint32_t nb_mcus_line, size_t array_size, bool luminance)
 {
-    // Give size to allocate on GPU
-    const int array_size = nb_mcu_line * 64 * sizeof(int16_t);
-
-    // Allocate memory on the device
-    int16_t *d_mcus_line_array;
-    gpuErrchk(cudaMalloc(&d_mcus_line_array, array_size));
-
     // Copy data from the host to the device (CPU -> GPU)
     gpuErrchk(cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice));
 
     const dim3 block_size(8, 8);
-    const dim3 grid_size(nb_mcu_line);
+    const dim3 grid_size(nb_mcus_line);
     // printf("Encoding in GPU starting\n");
-    encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcu_line, (uint8_t)luminance);
+    encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, nb_mcus_line, (uint8_t)luminance);
     // printf("Encoding in GPU done\n");
     gpuErrchk(cudaPeekAtLastError());
 
@@ -232,6 +225,4 @@ void encoding(int16_t *h_mcus_line_array, uint32_t nb_mcu_line, bool luminance)
     gpuErrchk(cudaMemcpy(h_mcus_line_array, d_mcus_line_array, array_size, cudaMemcpyDeviceToHost));
     // printf("Copy from GPU to CPU done\n");
 
-    gpuErrchk(cudaFree(d_mcus_line_array));
-    // printf("CudaFree done\n");
 }
