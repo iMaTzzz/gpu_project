@@ -133,13 +133,13 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
-            // TODO
-            // Call GPU
-            encoding(mcus_array, d_mcus_array, nb_mcus_allocated, mcus_array_size, true);
-            // Take result from GPU
-            // Call coding from results of GPU
-            coding_mcus(mcus_array, nb_mcus_allocated, ht_dc, ht_ac, stream, predicator, index);
         }
+        // TODO
+        // Call GPU
+        encoding(mcus_array, d_mcus_array, nb_mcus_allocated, mcus_array_size, true);
+        // Take result from GPU
+        // Call coding from results of GPU
+        coding_mcus(mcus_array, nb_mcus_allocated, ht_dc, ht_ac, stream, predicator, index);
     }
     /* On libère tous les espaces mémoire alloués. */
     gpuErrchk(cudaFree(d_mcus_array));
