@@ -12,7 +12,7 @@
 #include "jpeg_writer.h"
 #include "bitstream.h"
 #include "jpeg_header.h"
-#include "decoupe.h"
+#include "decoupe.cuh"
 #include "rgb_to_ycbcr.h"
 #include <stdbool.h>
 #include <time.h>
