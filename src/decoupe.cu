@@ -53,7 +53,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     size_t mcus_array_size = mcus_array_height * mcus_line_array_width * sizeof(int16_t);
     int16_t *mcus_array = (int16_t *) malloc(mcus_array_size);
     uint16_t nb_mcus_line_allocated = nb_mcu_column; // Nombre de ligne de MCUs alloué
-    while (mcus_line_array == NULL) {
+    while (mcus_array == NULL) {
         printf("malloc for mcus line array failed\n");
         // We remove a line of mcus in the array until we find the maximum number of lines that can be malloc'ed
         mcus_array_size -= mcus_array_size / 2;
@@ -287,7 +287,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
         encoding(mcus_line_array, d_mcus_line_array, nb_mcu_line*3, mcus_line_array_size, true);
         // Take result from GPU
         // Call coding from results of GPU
-        coding_mcus_line_Y_Cb_Cr(mcus_line_array, nb_mcu_line, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
+        coding_mcus_Y_Cb_Cr(mcus_line_array, nb_mcu_line, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
     }
 
     // OLD
