@@ -132,10 +132,12 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             }
             // TODO
             // Call GPU
-            encoding(mcus_array, d_mcus_array, nb_mcus_line_allocated * nb_mcu_line, mcus_array_size, true);
+            uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
+            printf("nb mcus allocated: %u\n", nb_mcus_allocated);
+            encoding(mcus_array, d_mcus_array, nb_mcus_allocated, mcus_array_size, true);
             // Take result from GPU
             // Call coding from results of GPU
-            coding_mcus(mcus_array, nb_mcus_line_allocated * nb_mcu_line, ht_dc, ht_ac, stream, predicator, index);
+            coding_mcus(mcus_array, nb_mcus_allocated, ht_dc, ht_ac, stream, predicator, index);
         }
     }
     /* On libère tous les espaces mémoire alloués. */
