@@ -25,6 +25,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante.
 */
+extern "C"
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     // TODO => Check memoire sur les mallocs/callocs
@@ -130,6 +131,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     free(index);
 }
 
+extern "C"
 void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
                         struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
                         struct bitstream *stream, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
