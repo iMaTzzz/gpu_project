@@ -172,9 +172,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     int16_t *predicator_Cb = calloc(1, sizeof(int16_t));
     int16_t *predicator_Cr = calloc(1, sizeof(int16_t));
 
-    uint8_t Y;
-    uint8_t Cb;
-    uint8_t Cr;
+    uint8_t Y_comp;
+    uint8_t Cb_comp;
+    uint8_t Cr_comp;
 
     printf("h1: %d -- v1: %d\n", h1, v1);
     printf("h2: %d -- v2: %d\n", h2, v2);
@@ -190,10 +190,10 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
                     uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
-                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y, &Cb, &Cr);
-                    mcus_line_array[mcu_pixel] = Y; // Y
-                    mcus_line_array[mcu_pixel + 64] = Cb; // Cb
-                    mcus_line_array[mcu_pixel + 128] = Cr; // Cr
+                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y_comp, &Cb_comp, &Cr_comp);
+                    mcus_line_array[mcu_pixel] = Y_comp; // Y
+                    mcus_line_array[mcu_pixel + 64] = Cb_comp; // Cb
+                    mcus_line_array[mcu_pixel + 128] = Cr_comp; // Cr
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
@@ -209,7 +209,6 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         mcus_line_array[mcu_pixel + 128] = mcus_line_array[mcu_last_pixel - 1 + 128];
                     }
                 }
-
             }
             // Puis on copie la dernière ligne de pixels présente dans l'image dans les lignes manquantes
             for (uint8_t line_offset = height_remainder; line_offset < 8; ++line_offset) {
@@ -240,10 +239,12 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
                     uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
-                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y, &Cb, &Cr);
-                    mcus_line_array[mcu_pixel] = Y; // Y
-                    mcus_line_array[mcu_pixel + 64] = Cb; // Cb
-                    mcus_line_array[mcu_pixel + 128] = Cr; // Cr
+                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y_comp, &Cb_comp, &Cr_comp);
+                    printf("Y: %d -- Cb: %d -- Cr: %d\n", Y_comp, Cb_comp, Cr_comp);
+                    exit(3);
+                    mcus_line_array[mcu_pixel] = Y_comp; // Y
+                    mcus_line_array[mcu_pixel + 64] = Cb_comp; // Cb
+                    mcus_line_array[mcu_pixel + 128] = Cr_comp; // Cr
                 }
                 // Troncature à droite possible que sur la dernière colonne de MCU
                 if (tronc_right) {
@@ -568,6 +569,8 @@ void treat_image_color_o(FILE *image, uint32_t width, uint32_t height, struct hu
                         mcu_Y[k][l] = rgb_to_ycbc_old(red, green, blue, Y);
                         mcu_Cb[k][l] = rgb_to_ycbc_old(red, green, blue, Cb);
                         mcu_Cr[k][l] = rgb_to_ycbc_old(red, green, blue, Cr);
+                        printf("Y: %d -- Cb: %d -- Cr: %d \n", mcu_Y[k][l], mcu_Cb[k][l], mcu_Cr[k][l]);
+                        exit(3);
                         // printf("%ld\n", ftell(image));
                     }
                 }
