@@ -75,9 +75,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     printf("nb mcus allocated: %u\n", nb_mcus_allocated);
 
     for (uint16_t nb_alloc = 0; nb_alloc < nb_mcu_column / nb_mcus_line_allocated; ++nb_alloc) {
-        printf("Current number alloc: %u\n", nb_alloc);
+        // printf("Current number alloc: %u\n", nb_alloc);
         for (uint32_t mcu_line = 0; mcu_line < nb_mcus_line_allocated && nb_alloc * nb_mcus_line_allocated + mcu_line < nb_mcu_column; mcu_line++) {
-            printf("Current mcu line: %u\n", mcu_line);
+            // printf("Current mcu line: %u\n", mcu_line);
             uint32_t global_mcu_line = mcu_line + nb_alloc * nb_mcus_line_allocated;
             uint32_t mcu_line_offset = mcu_line * 8 * mcus_line_array_width;
             // Troncature en bas possible que sur la dernière ligne de MCU
