@@ -49,7 +49,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     /* On alloue tous les espaces mémoire nécessaires. */
     uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + 8 - width_remainder;
     size_t mcus_line_array_size = 8 * mcus_line_array_width * sizeof(int16_t);
-    int16_t *mcus_line_array = malloc(mcus_line_array_size);
+    int16_t *mcus_line_array = (int16_t *) malloc(mcus_line_array_size);
     if (mcus_line_array == NULL) {
         printf("malloc for mcus line array failed\n");
         exit(EXIT_FAILURE);
@@ -58,8 +58,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     int16_t *d_mcus_line_array;
     gpuErrchk(cudaMalloc(&d_mcus_line_array, mcus_line_array_size));
 
-    uint16_t *index = malloc(sizeof(uint16_t));
-    int16_t *predicator = calloc(1, sizeof(int16_t));
+    uint16_t *index = (uint16_t *) malloc(sizeof(uint16_t));
+    int16_t *predicator = (int16_t *) calloc(1, sizeof(int16_t));
 
     for (uint32_t mcu_line = 0; mcu_line < nb_mcu_column; ++mcu_line) {
         // Troncature en bas possible que sur la dernière ligne de MCU
@@ -160,7 +160,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     size_t mcus_line_array_size = height_mcu * mcus_line_array_width * 3 * sizeof(int16_t);
 
     // Tableau des MCUs qui contient toutes les composantes dans l'ordre séquentiel de l'encodage
-    int16_t *mcus_line_array = malloc(mcus_line_array_size);
+    int16_t *mcus_line_array = (int16_t *) malloc(mcus_line_array_size);
     if (mcus_line_array == NULL) {
         printf("malloc for mcus line array failed\n");
         exit(EXIT_FAILURE);
@@ -170,11 +170,11 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     int16_t *d_mcus_line_array;
     gpuErrchk(cudaMalloc(&d_mcus_line_array, mcus_line_array_size));
 
-    uint16_t *index = malloc(sizeof(uint16_t));
+    uint16_t *index = (uint16_t *) malloc(sizeof(uint16_t));
     // On utilise un prédicateur par composante.
-    int16_t *predicator_Y = calloc(1, sizeof(int16_t));
-    int16_t *predicator_Cb = calloc(1, sizeof(int16_t));
-    int16_t *predicator_Cr = calloc(1, sizeof(int16_t));
+    int16_t *predicator_Y = (int16_t *) calloc(1, sizeof(int16_t));
+    int16_t *predicator_Cb = (int16_t *) calloc(1, sizeof(int16_t));
+    int16_t *predicator_Cr = (int16_t *) calloc(1, sizeof(int16_t));
 
     uint8_t red;
     uint8_t green;
