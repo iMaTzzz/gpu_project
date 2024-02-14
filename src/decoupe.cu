@@ -71,6 +71,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     uint16_t *index = (uint16_t *) malloc(sizeof(uint16_t));
     int16_t *predicator = (int16_t *) calloc(1, sizeof(int16_t));
 
+    uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
+    printf("nb mcus allocated: %u\n", nb_mcus_allocated);
+
     for (uint16_t nb_alloc = 0; nb_alloc < nb_mcu_column / nb_mcus_line_allocated; ++nb_alloc) {
         printf("Current number alloc: %u\n", nb_alloc);
         for (uint32_t mcu_line = 0; mcu_line < nb_mcus_line_allocated && nb_alloc * nb_mcus_line_allocated + mcu_line < nb_mcu_column; mcu_line++) {
@@ -132,8 +135,6 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             }
             // TODO
             // Call GPU
-            uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
-            printf("nb mcus allocated: %u\n", nb_mcus_allocated);
             encoding(mcus_array, d_mcus_array, nb_mcus_allocated, mcus_array_size, true);
             // Take result from GPU
             // Call coding from results of GPU
