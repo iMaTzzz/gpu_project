@@ -10,6 +10,24 @@
 #include "bitstream.h"
 #include "encoding.cuh"
 
+/* Cette fonction alloue une matrice de la taille de MCU/bloc voulue */
+static uint8_t **alloc_mcu(uint8_t width, uint8_t heigth)
+{
+    uint8_t **mcu = malloc(heigth * sizeof(uint8_t *));
+    for (int row = 0; row < heigth; row++) {
+        mcu[row] = malloc(width * sizeof(uint8_t));
+    }
+    return mcu;
+}
+
+/* Cette fonction libère l'espace alloué par un bloc ou une MCU. */
+static void free_mcu(uint8_t **mcu, uint8_t heigth) {
+    for (int row = 0; row < heigth; row++) {
+        free(mcu[row]);
+    }
+    free(mcu);
+}
+
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
     on traite chaque MCU intégralement, en effectuant les transformations successives,
