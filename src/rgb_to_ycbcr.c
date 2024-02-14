@@ -18,3 +18,15 @@ void rgb_to_ycbcr(uint8_t red, uint8_t green, uint8_t blue, uint8_t *Y, uint8_t 
     *Cb = (uint8_t)(-0.1687 * red - 0.3313 * green + 0.5 * blue + 128);
     *Cr = (uint8_t)(0.5 * red - 0.4187 * green - 0.0813 * blue + 128);
 }
+
+uint8_t rgb_to_ycbc_old(uint8_t red, uint8_t green, uint8_t blue, enum color_component cc)
+{
+    if (cc == Y) {
+        return (uint8_t)(0.299 * red + 0.587 * green + 0.114 * blue);
+    } else if (cc == Cb) {
+        return (uint8_t)(-0.1687 * red - 0.3313 * green + 0.5 * blue + 128);
+    } else {
+        return (uint8_t)(0.5 * red - 0.4187 * green - 0.0813 * blue + 128);
+    }
+}
+
