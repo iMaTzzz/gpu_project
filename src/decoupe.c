@@ -154,6 +154,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     int16_t *predicator_Cb = calloc(1, sizeof(int16_t));
     int16_t *predicator_Cr = calloc(1, sizeof(int16_t));
 
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
     uint8_t Y;
     uint8_t Cb;
     uint8_t Cr;
@@ -166,7 +169,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
             for (uint8_t line = 0; line < height_remainder; ++line) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
+                    uint32_t mcu_pixel = (column / 8) * 64 * 3 + line * 8 + column % 8;
                     rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y, &Cb, &Cr);
                     mcus_line_array[mcu_pixel] = Y; // Y
                     mcus_line_array[mcu_pixel + 64] = Cb; // Cb
@@ -216,8 +219,11 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
             for (uint8_t line = 0; line < height_mcu; ++line) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
-                    rgb_to_ycbcr(fgetc(image), fgetc(image), fgetc(image), &Y, &Cb, &Cr);
+                    uint32_t mcu_pixel = (column / 8) * 64 * 3 + line * 8 + column % 8;
+                    red = fgetc(image);
+                    green = fgetc(image);
+                    blue = fgetc(image);
+                    rgb_to_ycbcr(red, green, blue, &Y, &Cb, &Cr);
                     mcus_line_array[mcu_pixel] = Y; // Y
                     mcus_line_array[mcu_pixel + 64] = Cb; // Cb
                     mcus_line_array[mcu_pixel + 128] = Cr; // Cr
