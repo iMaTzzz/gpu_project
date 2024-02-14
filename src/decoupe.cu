@@ -63,6 +63,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             nb_mcus_line_allocated++;
         }
     }
+    printf("Nombre de lignes de MCUs alloué: %u, Nombre de lignes de MCUs: %u\n", nb_mcus_line_allocated, nb_mcu_column);
     // Allocate memory on the device
     int16_t *d_mcus_array;
     gpuErrchk(cudaMalloc(&d_mcus_array, mcus_array_size));
