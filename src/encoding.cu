@@ -208,12 +208,12 @@ __global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
 void encoding(int16_t *h_mcus_array, int16_t *d_mcus_array, uint32_t nb_mcus, size_t array_size, bool luminance)
 {
     // Copy data from the host to the device (CPU -> GPU)
-    gpuErrchk(cudaMemcpy(d_mcus_line_array, h_mcus_line_array, array_size, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_mcus_array, h_mcus_array, array_size, cudaMemcpyHostToDevice));
 
     const dim3 block_size(8, 8);
     const dim3 grid_size(nb_mcus);
     // printf("Encoding in GPU starting\n");
-    encoding_gpu<<<grid_size, block_size>>>(d_mcus_line_array, (uint8_t)luminance);
+    encoding_gpu<<<grid_size, block_size>>>(d_mcus_array, (uint8_t)luminance);
     // printf("Encoding in GPU done\n");
     gpuErrchk(cudaPeekAtLastError());
 
