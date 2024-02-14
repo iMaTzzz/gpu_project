@@ -238,7 +238,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
             for (uint8_t line = 0; line < height_mcu; ++line) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    uint32_t mcu_pixel = (column / 8) * 64 + line * 8 + column % 8;
+                    uint32_t mcu_pixel = (column / 8) * 3 * 64 + line * 8 + column % 8;
                     uint8_t red = fgetc(image);
                     uint8_t green = fgetc(image);
                     uint8_t blue = fgetc(image);
