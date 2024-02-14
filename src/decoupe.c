@@ -181,7 +181,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     for (uint8_t column_offset = column_index; column_offset < width_mcu; ++column_offset) {
                         // TODO => Modifier accès en fonction de la taille des MCUs et rajouter Cb et Cr
                         // On copie la valeur précédente pour remplir le reste de la ligne
-                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 + line * height_mcu;
+                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 * 3 + line * height_mcu;
                         uint32_t mcu_pixel = row_in_last_mcu + column_offset;
                         uint32_t mcu_last_pixel = row_in_last_mcu + column_index - 1;
                         mcus_line_array[mcu_pixel] = mcus_line_array[mcu_last_pixel - 1];
@@ -195,7 +195,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
             for (uint8_t line_offset = height_remainder; line_offset < 8; ++line_offset) {
                 uint32_t column;
                 for (column = 0; column < width; ++column) {
-                    uint32_t same_column_in_same_mcu = (column / 8) * 64 + column % 8;
+                    uint32_t same_column_in_same_mcu = (column / 8) * 64 * 3 + column % 8;
                     uint32_t mcu_pixel = same_column_in_same_mcu + line_offset * 8;
                     uint32_t mcu_last_pixel = same_column_in_same_mcu + (height_remainder - 1) * 8;
                     mcus_line_array[mcu_pixel] = mcus_line_array[mcu_last_pixel];
@@ -206,7 +206,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 if (tronc_right) {
                     uint8_t column_index = column % width_mcu;
                     for (uint8_t column_offset = column_index; column_offset < width_mcu; ++column_offset) {
-                        uint32_t mcu_pixel = (nb_mcu_line - 1) * 64 + line_offset * 8 + column_offset;
+                        uint32_t mcu_pixel = (nb_mcu_line - 1) * 64 * 3 + line_offset * 8 + column_offset;
                         uint32_t mcu_last_pixel = (nb_mcu_line - 1) * 64 + (height_remainder - 1) * 8 + column_index - 1;
                         // On copie la valeur précédente pour remplir le reste de la ligne
                         mcus_line_array[mcu_pixel] = mcus_line_array[mcu_last_pixel];
@@ -235,7 +235,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         // TODO => Modifier accès en fonction de la taille des MCUs et rajouter Cb et Cr
                         // On copie la valeur précédente pour remplir le reste de la ligne
                         // mcus_line_array[line * mcus_line_array_width + column_offset] = mcus_line_array[line * mcus_line_array_width + column_offset - 1];
-                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 + line * height_mcu;
+                        uint32_t row_in_last_mcu = (nb_mcu_line - 1) * 64 * 3 + line * height_mcu;
                         uint32_t mcu_pixel = row_in_last_mcu + column_offset;
                         uint32_t mcu_last_pixel = row_in_last_mcu + column_index - 1;
                         mcus_line_array[mcu_pixel] = mcus_line_array[mcu_last_pixel - 1];
