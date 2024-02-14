@@ -262,40 +262,40 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 }
             }
 
-        }
-
-        // print MCUs line
-        for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
-            printf("--- mcu y ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+            // print MCUs line
+            for (uint32_t i_mcu = 0; i_mcu < nb_mcu_line; ++i_mcu) {
+                printf("--- mcu y ---\n");
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + i * 8 + j]);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
-            }
-            printf("\n\n");
+                printf("\n\n");
 
-            printf("--- mcu Cb ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_line_array[i_mcu * 64 + 64 + i * 8 + j]);
+                printf("--- mcu Cb ---\n");
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + 64 + i * 8 + j]);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
-            }
-            printf("\n\n");
+                printf("\n\n");
 
-            printf("--- mcu Cr ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_line_array[i_mcu * 64 + 128 + i * 8 + j]);
+                printf("--- mcu Cr ---\n");
+                printf("mcu number %d\n", mcu_index);
+                for (uint8_t i = 0; i < 8; i++) {
+                    for (uint8_t j = 0; j < 8; j++) {
+                        printf("%d ", mcus_line_array[i_mcu * 64 + 128 + i * 8 + j]);
+                    }
+                    printf("\n");
                 }
-                printf("\n");
+                printf("\n\n");
+                mcu_index++;
             }
-            printf("\n\n");
-            mcu_index++;
+
         }
 
         // TODO
