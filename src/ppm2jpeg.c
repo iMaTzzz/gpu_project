@@ -212,7 +212,8 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                     continue; // Skip to the next file
                 }
                 long file_size = st.st_size;
-                for (uint8_t i = 0; i < 10; ++i) {
+                uint8_t nb_of_tests = 1;
+                for (uint8_t i = 0; i < nb_of_tests; ++i) {
                     printf("%u\n", i);
                     // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
                     // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
@@ -222,11 +223,11 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                     mean_time_taken_cpu += tmp_cpu;
                     mean_time_taken_gpu += tmp_gpu;
                 }
-                mean_time_taken_cpu /= 10;
-                mean_time_taken_gpu /= 10;
+                mean_time_taken_cpu /= nb_of_tests;
+                mean_time_taken_gpu /= nb_of_tests;
                 printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
             }
-            if (strcmp("shaun_the_sheen.pgm", entry->d_name) == 0) break;
+            if (strcmp("shaun_the_sheen.pgm", entry->d_name) == 0) return;
         }
     }
 
