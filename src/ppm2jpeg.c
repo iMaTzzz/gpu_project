@@ -298,13 +298,13 @@ int main(int argc, char **argv)
                 index++;
             }
             verify_sampling_values(h1, v1, h2, v2, h3, v3);
-        } else if (strncmp(argv[i], "--test", 6) == 0) {
+        } else if (strncmp(argv[i], "--test=", 7) == 0) {
             test = true;
-            uint8_t taille = strlen(argv[i]) - 6;
+            uint8_t taille = strlen(argv[i]) - 7;
             dir_path = malloc(taille+1);
             
-            for (uint8_t j = 6; argv[i][j] != '\0'; j++) {
-                dir_path[j-6] = argv[i][j];
+            for (uint8_t j = 7; argv[i][j] != '\0'; j++) {
+                dir_path[j-7] = argv[i][j];
             }
             dir_path[taille] = '\0';
         } 
