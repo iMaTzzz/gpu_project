@@ -154,7 +154,7 @@ int get_file_values(int16_t *mcus_array) {
     int i = 0;
 
     // Open the file for reading
-    file = fopen("mcus_array.txt", "r");
+    file = fopen("../dist/mcus_array", "r");
     if (file == NULL) {
         perror("Error opening file");
         return 1;
@@ -163,16 +163,16 @@ int get_file_values(int16_t *mcus_array) {
     // Read each line until the end of file
     while (fgets(line, sizeof(line), file) != NULL && i < 5100 * 64 * 3) {
         // Convert string to int16_t and store in the array
-        mcus_array[i] = (int16_t)strtoimax(line, NULL, 10);
+        mcus_array[i] = (int16_t)atoi(line);
         i++;
     }
 
     // Close the file
     fclose(file);
 
-    for (uint32_t i = 0; i < 5100 * 64 * 3; i++) {
-        printf("%d\n", mcus_array[i]);
-    }
+    //for (uint32_t i = 0; i < 5100 * 64 * 3; i++) {
+    //    printf("%d\n", mcus_array[i]);
+    //}
 
     // Now you have the numbers in the 'numbers' array
     // Do whatever you need to do with them
