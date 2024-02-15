@@ -215,7 +215,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                 uint8_t nb_of_tests = 10;
                 if (image_nb == 0) {
                     // DO GPU WARMUP
-                    double tmp_gpu = ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                    ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
                 }
                 for (uint8_t i = 0; i < nb_of_tests; ++i) {
                     // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
