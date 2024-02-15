@@ -183,8 +183,7 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
         free(jpg_new_filename);
     }
     end = clock();
-    double time_taken = ((double) end - start) / CLOCKS_PER_SEC;
-    return time_taken;
+    return ((double) end - start) / CLOCKS_PER_SEC;
 }
 
 static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
@@ -212,8 +211,14 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
             long file_size = st.st_size;
             printf("Test: Time taken: CPU=%f, GPU=%f\n", mean_time_taken_cpu, mean_time_taken_gpu);
             for (uint8_t i = 0; i < 10; ++i) {
-                mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
-                mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                printf("%u\n", i);
+                // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
+                // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                double tmp_cpu = ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
+                double tmp_gpu = ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                printf("time_cpu: %f, time_gpu: %f\n", tmp_cpu, tmp_gpu);
+                mean_time_taken_cpu += tmp_cpu;
+                mean_time_taken_gpu += tmp_gpu;
             }
             mean_time_taken_cpu /= 10;
             mean_time_taken_gpu /= 10;
