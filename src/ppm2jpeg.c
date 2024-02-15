@@ -202,6 +202,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
         if (entry->d_type == DT_REG) { // Check if it's a regular file
             char filename[1024]; // Assuming max file name length is 1024 characters
             snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
+            printf("filename: %s\n", filename);
             // Get the size of the file
             struct stat st;
             if (stat(filename, &st) == -1) {
