@@ -5,24 +5,25 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include "dct.h"
+#include <stdbool.h>
+#include <time.h>
 #include "coding.h"
 #include "htables.h"
 #include "huffman.h"
+#include "jpeg_header.h"
 #include "jpeg_writer.h"
 #include "bitstream.h"
-#include "jpeg_header.h"
-#include "decoupe.h"
+#include "decoupe_cpu.h"
+#include "decoupe_gpu.cuh"
 #include "rgb_to_ycbcr.h"
-#include <stdbool.h>
-#include <time.h>
 
 static void verif_params(char **argv)
 {
-    fprintf(stderr, "Usage: %s --help --outfile=ouput.jpg --sample=h1xv1,h2xv2,h3xv3 input.ppm \n", argv[0]);
+    fprintf(stderr, "Usage: %s --help --gpu --outfile=ouput.jpg --sample=h1xv1,h2xv2,h3xv3 input.ppm \n", argv[0]);
     fprintf(stderr, "où:\n");
     fprintf(stderr, "\t- --help affiche la liste des options acceptées ;\n");
-    fprintf(stderr, "\t- --outfile=ouput.jpg pour rédifinir le nom du fichier de sortie ;\n");
+    fprintf(stderr, "\t- --gpu pour utiliser la version parallèle en utilisant le GPU, par défaut la version CPU est utilisée ;\n");
+    fprintf(stderr, "\t- --outfile=ouput.jpg pour rédéfinir le nom du fichier de sortie ;\n");
     fprintf(stderr, "\t- --sample=h1xv1,h2xv2,h3xv3 pour définir les facteurs d'échantillonnage hxv des trois composantes de couleur ;\n");
     fprintf(stderr, "\t- input.ppm est le nom du fichier ppm à convertir ;\n");
     exit(EXIT_FAILURE);
@@ -93,6 +94,8 @@ int main(int argc, char **argv)
     uint8_t v2 = 1;
     uint8_t h3 = 1;
     uint8_t v3 = 1;
+    /* Par défaut, on utilise la version cpu */
+    bool cpu = true;
     char *jpg_new_filename = NULL;
     if (argc < 2) {
         verif_params(argv);// On affiche la notice s'il n'y a pas au moins 2 paramètres en entrée.
@@ -100,6 +103,8 @@ int main(int argc, char **argv)
     for (uint8_t i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0) {
             verif_params(argv);// On affiche la notice pour l'utilisation de ppm2jpeg
+        } else if (strncmp(argv[i], "--gpu", 5) == 0) {
+            cpu = false;
         } else if (strncmp(argv[i], "--outfile=", 10) == 0) {
             /* On alloue le nouveau nom du fichier de sortie */
             uint8_t taille = strlen(argv[i]) - 10;
@@ -198,8 +203,13 @@ int main(int argc, char **argv)
         
         /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
         struct bitstream *stream = jpeg_get_bitstream(jpg);
-        treat_image_color(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
-                        stream, h1, v1, h2, v2, h3, v3);
+        if (cpu) {
+            treat_image_color_cpu(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
+                            stream, h1, v1, h2, v2, h3, v3);
+        } else {
+            treat_image_color_gpu(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
+                            stream, h1, v1, h2, v2, h3, v3);
+        }
 
         /* On écrit le footer pour finaliser le fichier jpeg */
         jpeg_write_footer(jpg);
@@ -231,7 +241,11 @@ int main(int argc, char **argv)
 
         /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
         struct bitstream *stream = jpeg_get_bitstream(jpg);
-        treat_image_grey(input, width, height, ht_dc, ht_ac, stream);
+        if (cpu) {
+            treat_image_grey_cpu(input, width, height, ht_dc, ht_ac, stream);
+        } else {
+            treat_image_grey_gpu(input, width, height, ht_dc, ht_ac, stream);
+        }
         
         /* On écrit le footer pour finaliser le fichier jpeg */
         jpeg_write_footer(jpg);
