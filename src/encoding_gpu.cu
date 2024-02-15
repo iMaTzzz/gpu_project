@@ -184,6 +184,7 @@ __global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
     d_mcus_array[index_in_mcus_array] = output_shared_block[thread_id_in_block];
 }
 
+extern "C"
 void encoding(int16_t *h_mcus_array, int16_t *d_mcus_array, uint32_t nb_mcus, size_t array_size, bool luminance)
 {
     // Copy data from the host to the device (CPU -> GPU)

@@ -29,6 +29,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
     on alloue le plus de MCUs possibles puis on effectue en parallèle
     les transformations successives.
 */
+extern "C"
 void treat_image_grey_gpu(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     uint32_t nb_mcu_column = height / 8; // Nombre de MCUs par colonne
@@ -158,6 +159,7 @@ void treat_image_grey_gpu(FILE *image, uint32_t width, uint32_t height, struct h
     on alloue le plus de MCUs possibles puis on effectue en parallèle
     les transformations successives.
 */
+extern "C"
 void treat_image_color_gpu(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
                         struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
                         struct bitstream *stream, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
