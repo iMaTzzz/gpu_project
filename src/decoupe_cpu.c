@@ -179,8 +179,8 @@ void treat_image_color_cpu(FILE *image, uint32_t width, uint32_t height, struct 
         column_mcu++; // On rajoute une colonne de MCUs.
         tronc_column = 1; // Il y a troncature à droite.
     }
-    printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
-    printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
+    // printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
+    // printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
     bool tronc_line_mcu; // Indique si il y a une troncature en bas dans la MCU courante.
     bool tronc_column_mcu; // Indique si il y a une troncature à droite dans la MCU courante.
     uint8_t red;
