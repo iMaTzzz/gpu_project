@@ -217,7 +217,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
             }
             mean_time_taken_cpu /= 10;
             mean_time_taken_gpu /= 10;
-            printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_type, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
+            printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
         }
     }
 
