@@ -100,6 +100,7 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
     uint32_t width;
     uint32_t height;
     if (read_parameters(input, &width, &height)) { //Cas RGB
+        printf("width: %u, height: %u\n", width, height);
         // printf("Le type de fichier lu est : P6\n");
 
         /* On crée les tables de huffman pour les composantes Y et Cb/Cr */
