@@ -247,8 +247,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
         column_mcu++; // On rajoute une colonne de MCUs.
         tronc_column = 1; // Il y a troncature à droite.
     }
-    printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
-    printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
+    // printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
+    // printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
     bool tronc_line_mcu; // Indique si il y a une troncature en bas dans la MCU courante.
     bool tronc_column_mcu; // Indique si il y a une troncature à droite dans la MCU courante.
     uint8_t red;
@@ -342,15 +342,17 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
 
-                    printf("--- mcu Y ---\n");
-                    printf("mcu number %d\n", mcu_index);
-                    for (uint8_t i = 0; i < 8; i++) {
-                        for (uint8_t j = 0; j < 8; j++) {
-                            printf("%d ", bloc_array[i * 8 + j]);
-                        }
-                        printf("\n");
                     }
-                    printf("\n\n");
+
+                    // printf("--- mcu Y ---\n");
+                    // printf("mcu number %d\n", mcu_index);
+                    // for (uint8_t i = 0; i < 8; i++) {
+                    //     for (uint8_t j = 0; j < 8; j++) {
+                    //         printf("%d ", bloc_array[i * 8 + j]);
+                    //     }
+                    //     printf("\n");
+                    // }
+                    // printf("\n\n");
 
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index); // On encode le bloc.
@@ -379,15 +381,17 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
 
-                    printf("--- mcu Cb ---\n");
-                    printf("mcu number %d\n", mcu_index);
-                    for (uint8_t i = 0; i < 8; i++) {
-                        for (uint8_t j = 0; j < 8; j++) {
-                            printf("%d ", bloc_array[i * 8 + j]);
-                        }
-                        printf("\n");
                     }
-                    printf("\n\n");
+
+                    // printf("--- mcu Cb ---\n");
+                    // printf("mcu number %d\n", mcu_index);
+                    // for (uint8_t i = 0; i < 8; i++) {
+                    //     for (uint8_t j = 0; j < 8; j++) {
+                    //         printf("%d ", bloc_array[i * 8 + j]);
+                    //     }
+                    //     printf("\n");
+                    // }
+                    // printf("\n\n");
 
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index); // On encode le bloc.
@@ -417,15 +421,17 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
 
-                    printf("--- mcu Cr ---\n");
-                    printf("mcu number %d\n", mcu_index);
-                    for (uint8_t i = 0; i < 8; i++) {
-                        for (uint8_t j = 0; j < 8; j++) {
-                            printf("%d ", bloc_array[i * 8 + j]);
-                        }
-                        printf("\n");
                     }
-                    printf("\n\n");
+
+                    // printf("--- mcu Cr ---\n");
+                    // printf("mcu number %d\n", mcu_index);
+                    // for (uint8_t i = 0; i < 8; i++) {
+                    //     for (uint8_t j = 0; j < 8; j++) {
+                    //         printf("%d ", bloc_array[i * 8 + j]);
+                    //     }
+                    //     printf("\n");
+                    // }
+                    // printf("\n\n");
 
                     // print_array_16(mcu_array);
                     coding(bloc_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index); // On encode le bloc.
