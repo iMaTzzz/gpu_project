@@ -5,7 +5,6 @@
 #include <math.h>
 #include <iostream>
 #include <assert.h>
-#include "encoding.cuh"
 
 /* Constantes utilisées dans l'algorithme de Loeffler pour appliquer la DCT*/
 #define VALUE_0_765366865 0.765366865        // sqrt(2) * (sin(3pi/8) - cos(3pi/8))
