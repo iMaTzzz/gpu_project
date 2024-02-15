@@ -233,7 +233,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                 nb_images += 1;
             }
         }
-        if (nb_images == 2) {
+        if (nb_images == 10) {
             return;
         }
     }
