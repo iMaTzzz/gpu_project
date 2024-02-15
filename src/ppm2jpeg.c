@@ -200,8 +200,11 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
         double mean_time_taken_gpu = 0;
         if (entry->d_type == DT_REG) { // Check if it's a regular file
             char filename[1024]; // Assuming max file name length is 1024 characters
+            char* jpg_new_filename = malloc(50 * sizeof(char));
+            strcpy(jpg_new_filename, entry->d_name);
             snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
             printf("filename: %s\n", filename);
+            printf("jpg_new_filename: %s\n", jpg_new_filename);
             // Get the size of the file
             struct stat st;
             if (stat(filename, &st) == -1) {
@@ -213,8 +216,8 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                 printf("%u\n", i);
                 // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
                 // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
-                double tmp_cpu = ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
-                double tmp_gpu = ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                double tmp_cpu = ppm2jpeg(filename, jpg_new_filename, true, h1, v1, h2, v2, h3, v3); // on CPU
+                double tmp_gpu = ppm2jpeg(filename, jpg_new_filename, false, h1, v1, h2, v2, h3, v3);  // on GPU
                 printf("time_cpu: %f, time_gpu: %f\n", tmp_cpu, tmp_gpu);
                 mean_time_taken_cpu += tmp_cpu;
                 mean_time_taken_gpu += tmp_gpu;
