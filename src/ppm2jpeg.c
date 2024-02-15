@@ -199,32 +199,35 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
         double mean_time_taken_cpu = 0;
         double mean_time_taken_gpu = 0;
         if (entry->d_type == DT_REG) { // Check if it's a regular file
-            char filename[1024]; // Assuming max file name length is 1024 characters
-            char* jpg_new_filename = malloc(50 * sizeof(char));
-            strcpy(jpg_new_filename, entry->d_name);
-            snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
-            printf("filename: %s\n", filename);
-            printf("jpg_new_filename: %s\n", jpg_new_filename);
-            // Get the size of the file
-            struct stat st;
-            if (stat(filename, &st) == -1) {
-                perror("Failed to get file size");
-                continue; // Skip to the next file
+            // Check if the file name ends with ".ppm" or ".pgm"
+            size_t len = strlen(entry->d_name);
+            if ((len > 4) && (strcmp(entry->d_name + len - 4, ".ppm") == 0 || strcmp(entry->d_name + len - 4, ".pgm") == 0)) {
+                char filename[1024]; // Assuming max file name length is 1024 characters
+                snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
+                printf("filename: %s\n", filename);
+                // Get the size of the file
+                struct stat st;
+                if (stat(filename, &st) == -1) {
+                    perror("Failed to get file size");
+                    continue; // Skip to the next file
+                }
+                long file_size = st.st_size;
+                for (uint8_t i = 0; i < 10; ++i) {
+                    printf("%u\n", i);
+                    char* jpg_new_filename = malloc(50 * sizeof(char));
+                    strcpy(jpg_new_filename, entry->d_name);
+                    // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
+                    // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                    double tmp_cpu = ppm2jpeg(filename, jpg_new_filename, true, h1, v1, h2, v2, h3, v3); // on CPU
+                    double tmp_gpu = ppm2jpeg(filename, jpg_new_filename, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                    printf("time_cpu: %f, time_gpu: %f\n", tmp_cpu, tmp_gpu);
+                    mean_time_taken_cpu += tmp_cpu;
+                    mean_time_taken_gpu += tmp_gpu;
+                }
+                mean_time_taken_cpu /= 10;
+                mean_time_taken_gpu /= 10;
+                printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
             }
-            long file_size = st.st_size;
-            for (uint8_t i = 0; i < 10; ++i) {
-                printf("%u\n", i);
-                // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
-                // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
-                double tmp_cpu = ppm2jpeg(filename, jpg_new_filename, true, h1, v1, h2, v2, h3, v3); // on CPU
-                double tmp_gpu = ppm2jpeg(filename, jpg_new_filename, false, h1, v1, h2, v2, h3, v3);  // on GPU
-                printf("time_cpu: %f, time_gpu: %f\n", tmp_cpu, tmp_gpu);
-                mean_time_taken_cpu += tmp_cpu;
-                mean_time_taken_gpu += tmp_gpu;
-            }
-            mean_time_taken_cpu /= 10;
-            mean_time_taken_gpu /= 10;
-            printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
         }
     }
 
