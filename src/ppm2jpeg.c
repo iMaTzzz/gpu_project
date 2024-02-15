@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <stdbool.h>
 #include <time.h>
+#include <dirent.h>
 #include "coding.h"
 #include "htables.h"
 #include "huffman.h"
@@ -26,6 +27,10 @@ static void verif_params(char **argv)
     fprintf(stderr, "\t- --outfile=ouput.jpg pour rédéfinir le nom du fichier de sortie ;\n");
     fprintf(stderr, "\t- --sample=h1xv1,h2xv2,h3xv3 pour définir les facteurs d'échantillonnage hxv des trois composantes de couleur ;\n");
     fprintf(stderr, "\t- input.ppm est le nom du fichier ppm à convertir ;\n");
+    fprintf(stderr, "___________________________________________________________________ \n");
+    fprintf(stderr, "Usage: %s --test:relative_directory_path \n", argv[0]);
+    fprintf(stderr, "où:\n");
+    fprintf(stderr, "\t- --test:relative_directory_path pour tester toutes les images dans le directory sur les deux versions ;\n");
     exit(EXIT_FAILURE);
 }
 
@@ -81,100 +86,15 @@ bool read_parameters(FILE *input, uint32_t *width, uint32_t *height)
     return verif;
 }
 
-
-int main(int argc, char **argv)
+static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
 {
     clock_t start, end;
     start = clock();
-
-    /* On initialise les valeurs de sous-échantillonnage */
-    uint8_t h1 = 1;
-    uint8_t v1 = 1;
-    uint8_t h2 = 1;
-    uint8_t v2 = 1;
-    uint8_t h3 = 1;
-    uint8_t v3 = 1;
-    /* Par défaut, on utilise la version cpu */
-    bool cpu = true;
-    char *jpg_new_filename = NULL;
-    if (argc < 2) {
-        verif_params(argv);// On affiche la notice s'il n'y a pas au moins 2 paramètres en entrée.
-    }
-    for (uint8_t i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "--help") == 0) {
-            verif_params(argv);// On affiche la notice pour l'utilisation de ppm2jpeg
-        } else if (strncmp(argv[i], "--gpu", 5) == 0) {
-            cpu = false;
-        } else if (strncmp(argv[i], "--outfile=", 10) == 0) {
-            /* On alloue le nouveau nom du fichier de sortie */
-            uint8_t taille = strlen(argv[i]) - 10;
-            jpg_new_filename = malloc(taille+1);
-            for (uint8_t j = 10; argv[i][j] != '\0'; j++) {
-                jpg_new_filename[j-10] = argv[i][j];
-            }
-            jpg_new_filename[taille] = '\0';
-        } else if (strncmp(argv[i], "--sample=", 9) == 0) {
-            /* 
-            On détermine les nouvelles valeurs du sous-échantillonnage 
-            et on vérifie si elles vérifient les conditions.
-            */
-            h1 = 0;
-            v1 = 0;
-            h2 = 0;
-            v2 = 0;
-            h3 = 0;
-            v3 = 0;
-            uint8_t index = 9;
-            while (argv[i][index] != 'x') {
-                printf("%c\n", argv[i][index]);
-                h1 *= 10;
-                h1 += argv[i][index] - '0';
-                index++;
-            }
-            index++; // On incrémente pour skip 'x'
-            while (argv[i][index] != ',') {
-                v1 *= 10;
-                v1 += argv[i][index] - '0';
-                index++;
-            }
-            index++; // On incrémente pour skip ','
-
-            while (argv[i][index] != 'x') {
-                h2 *= 10;
-                h2 += argv[i][index] - '0';
-                index++;
-            }
-            index++; // On incrémente pour skip 'x'
-            while (argv[i][index] != ',') {
-                v2 *= 10;
-                v2 += argv[i][index] - '0';
-                index++;
-            }
-            index++; // On incrémente pour skip ','
-
-            while (argv[i][index] != 'x') {
-                h3 *= 10;
-                h3 += argv[i][index] - '0';
-                index++;
-            }
-            index++; // On incrémente pour skip 'x'
-            while (argv[i][index] != '\0') {
-                v3 *= 10;
-                v3 += argv[i][index] - '0';
-                index++;
-            }
-            verify_sampling_values(h1, v1, h2, v2, h3, v3);
-        }
-    }
-    char ppm_filename[strlen(argv[argc - 1])];
-    strcpy(ppm_filename, argv[argc - 1]);
-
-    FILE *input = fopen(argv[argc - 1], "r");
+    FILE *input = fopen(ppm_filename, "r");
     if (input == NULL) {
         perror("Ouverture du fichier d'entrée n'a pas marché");
         exit(EXIT_FAILURE);
     }
-
     uint32_t width;
     uint32_t height;
     if (read_parameters(input, &width, &height)) { //Cas RGB
@@ -261,19 +181,143 @@ int main(int argc, char **argv)
     if (jpg_new_filename != NULL) {
         free(jpg_new_filename);
     }
-    /* Tests pour debugguer notre module */
-    // struct bitstream *stream = bitstream_create("./tests.jpg");
-    // bitstream_write_bits(stream, 0xffda, 16, true);
-    // bitstream_write_bits(stream, 0x16, 8, false);
-    // bitstream_write_bits(stream, 0xff, 8, false);
-    // bitstream_write_bits(stream, 0x156, 12, false);
-    // bitstream_write_bits(stream, 0x5, 4, false);
-    // bitstream_write_bits(stream, 0x7, 3, false);
-    // bitstream_write_bits(stream, 0xffda, 16, true);
-
     end = clock();
-    double time_used = ((double) end - start) / CLOCKS_PER_SEC;
-    printf("time used in seconds: %f\n", time_used);
+    double time_taken = ((double) end - start) / CLOCKS_PER_SEC;
+    return time_taken;
+}
 
-    exit(EXIT_SUCCESS);
+static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
+{
+    DIR *dir = opendir(dir_path);
+    if (dir == NULL) {
+        perror("Failed to open directory");
+        exit(EXIT_FAILURE);
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        // Process each file
+        double mean_time_taken_cpu = 0;
+        double mean_time_taken_gpu = 0;
+        if (entry->d_type == DT_REG) { // Check if it's a regular file
+            char filename[1024]; // Assuming max file name length is 1024 characters
+            snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
+            for (uint8_t i = 0; i < 10; ++i) {
+                mean_time_taken_cpu += ppm2jpeg(filename, "default.jpg", true, h1, v1, h2, v2, h3, v3); // on CPU
+                mean_time_taken_gpu += ppm2jpeg(filename, "default.jpg", false, h1, v1, h2, v2, h3, v3);  // on GPU
+            }
+            mean_time_taken_cpu /= 10;
+            mean_time_taken_gpu /= 10;
+            printf("Time taken on %s: CPU=%d, GPU=%d\n", filename, mean_time_taken_cpu, mean_time_taken_gpu);
+        }
+    }
+
+    closedir(dir);
+    free(dir_path);
+}
+
+
+int main(int argc, char **argv)
+{
+    /* On initialise les valeurs de sous-échantillonnage */
+    uint8_t h1 = 1;
+    uint8_t v1 = 1;
+    uint8_t h2 = 1;
+    uint8_t v2 = 1;
+    uint8_t h3 = 1;
+    uint8_t v3 = 1;
+    /* Par défaut, on utilise la version cpu */
+    bool cpu = true;
+    /* On initialise les variables pour pouvoir lancer les tests */
+    bool test = false;
+    char* dir_path;
+    char *jpg_new_filename = NULL;
+    if (argc < 2) {
+        verif_params(argv);// On affiche la notice s'il n'y a pas au moins 2 paramètres en entrée.
+    }
+    for (uint8_t i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "--help") == 0) {
+            verif_params(argv);// On affiche la notice pour l'utilisation de ppm2jpeg
+        } else if (strncmp(argv[i], "--gpu", 5) == 0) {
+            cpu = false;
+        } else if (strncmp(argv[i], "--outfile=", 10) == 0) {
+            /* On alloue le nouveau nom du fichier de sortie */
+            uint8_t taille = strlen(argv[i]) - 10;
+            jpg_new_filename = malloc(taille+1);
+            for (uint8_t j = 10; argv[i][j] != '\0'; j++) {
+                jpg_new_filename[j-10] = argv[i][j];
+            }
+            jpg_new_filename[taille] = '\0';
+        } else if (strncmp(argv[i], "--sample=", 9) == 0) {
+            /* 
+            On détermine les nouvelles valeurs du sous-échantillonnage 
+            et on vérifie si elles vérifient les conditions.
+            */
+            h1 = 0;
+            v1 = 0;
+            h2 = 0;
+            v2 = 0;
+            h3 = 0;
+            v3 = 0;
+            uint8_t index = 9;
+            while (argv[i][index] != 'x') {
+                printf("%c\n", argv[i][index]);
+                h1 *= 10;
+                h1 += argv[i][index] - '0';
+                index++;
+            }
+            index++; // On incrémente pour skip 'x'
+            while (argv[i][index] != ',') {
+                v1 *= 10;
+                v1 += argv[i][index] - '0';
+                index++;
+            }
+            index++; // On incrémente pour skip ','
+
+            while (argv[i][index] != 'x') {
+                h2 *= 10;
+                h2 += argv[i][index] - '0';
+                index++;
+            }
+            index++; // On incrémente pour skip 'x'
+            while (argv[i][index] != ',') {
+                v2 *= 10;
+                v2 += argv[i][index] - '0';
+                index++;
+            }
+            index++; // On incrémente pour skip ','
+
+            while (argv[i][index] != 'x') {
+                h3 *= 10;
+                h3 += argv[i][index] - '0';
+                index++;
+            }
+            index++; // On incrémente pour skip 'x'
+            while (argv[i][index] != '\0') {
+                v3 *= 10;
+                v3 += argv[i][index] - '0';
+                index++;
+            }
+            verify_sampling_values(h1, v1, h2, v2, h3, v3);
+        } else if (strncmp(argv[i], "--test", 6) == 0) {
+            test = true;
+            uint8_t taille = strlen(argv[i]) - 6;
+            dir_path = malloc(taille+1);
+            
+            for (uint8_t j = 6; argv[i][j] != '\0'; j++) {
+                dir_path[j-6] = argv[i][j];
+            }
+            dir_path[taille] = '\0';
+        } 
+    }
+    if (test) {
+        start_test(dir_path, h1, v1, h2, v2, h3, v3);
+        return 0;
+    }
+    char ppm_filename[strlen(argv[argc - 1])];
+    strcpy(ppm_filename, argv[argc - 1]);
+
+    clock_t time_taken = ppm2jpeg(ppm_filename, jpg_new_filename, cpu, h1, v2, h2, v2, h3, v3);
+    printf("time taken in seconds: %f\n", time_taken);
+
+    return 0;
 }
