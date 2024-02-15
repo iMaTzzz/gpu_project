@@ -7,36 +7,16 @@
 #include <assert.h>
 #include "encoding.cuh"
 
-/* Constantes utilisées dans les deux versions des algorithmes de Loeffler */
-#define VALUE_0_390180644 0.390180644
-#define VALUE_1_961570560 1.961570560
-#define VALUE_0_899976223 0.899976223
-#define VALUE_1_501321110 1.501321110
-#define VALUE_0_298631336 0.298631336
-#define VALUE_2_562915447 2.562915447
-#define VALUE_3_072711026 3.072711026
-#define VALUE_2_053119869 2.053119869
-#define VALUE_1_175875602 1.175875602        // cos(pi/16) + sin(pi/16)
+/* Constantes utilisées dans l'algorithme de Loeffler pour appliquer la DCT*/
 #define VALUE_0_765366865 0.765366865        // sqrt(2) * (sin(3pi/8) - cos(3pi/8))
-#define VALUE_1_847759065 1.847759065        // sqrt(2) * (cos(3pi/8) + sin(3pi/8))
 #define VALUE_MINUS_1_847759065 -1.847759065 // -sqrt(2) * (cos(3pi/8) + sin(3pi/8))
 #define VALUE_MINUS_1_175875602 -1.175875602 // -(cos(pi/16) + sin(pi/16))
-#define VALUE_0_382683433 0.382683433        // sin(pi/8)
 #define VALUE_0_541196100 0.541196100        // sqrt(2) * cos(3pi/8)
-#define VALUE_MINUS_0_541196100 -0.541196100 // -sqrt(2) * cos(3pi/8)
-#define VALUE_1_306562965 1.306562965        // sqrt(2) * sin(3pi/8)
 #define VALUE_MINUS_0_275899379 -0.275899379 // sin(3pi/16) - cos(3pi/16)
-#define VALUE_1_387039845 1.387039845        // cos(3pi/16) + sin(3pi/16)
-#define VALUE_MINUS_1_387039845 -1.387039845 // -(cos(3pi/16) + sin(3pi/16))
+#define VALUE_MINUS_1_387039845 -1.387039845 // -(cos(3pi/16) + sin(3pi/16)
 #define VALUE_1_414213562 1.414213562        // sqrt(2)
-#define VALUE_0_555570233 0.555570233        // sin(3pi/16)
 #define VALUE_0_831469612 0.831469612        // cos(3pi/16)
-#define VALUE_MINUS_0_831469612 -0.831469612 // -cos(3pi/16)
-#define VALUE_0_195090322 0.195090322        // sin(pi/16)
 #define VALUE_0_980785280 0.980785280        // cos(pi/16)
-#define VALUE_MINUS_0_980785280 -0.980785280 // -cos(pi/16)
-#define VALUE_0_923879533 0.923879533        // cos(pi/8)
-#define VALUE_MINUS_0_923879533 -0.923879533 // -cos(pi/8)
 #define VALUE_MINUS_0_785694958 -0.785694958 // sin(pi/16) - cos(pi/16)
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -83,7 +63,7 @@ __global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
 {
     /******** DCT + zig zag ********/
     // temporary data structure used by all threads within a block
-    __shared__ int32_t shared_block[8][8];
+    __shared__ int32_t tmp_shared_block[8][8];
     __shared__ int16_t output_shared_block[64];
     uint32_t tx = threadIdx.x;
     uint32_t ty = threadIdx.y;
@@ -123,20 +103,20 @@ __global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
 
         // Stage 3 contains 3 mult + 9 adds
         tmp2 = VALUE_0_541196100 * (b2 + b3);
-        shared_block[ty][0] = b0 + b1;
-        shared_block[ty][2] = VALUE_0_765366865 * b3 + tmp2;
-        shared_block[ty][4] = b0 - b1;
-        shared_block[ty][6] = VALUE_MINUS_1_847759065 * b2 + tmp2;
+        tmp_shared_block[ty][0] = b0 + b1;
+        tmp_shared_block[ty][2] = VALUE_0_765366865 * b3 + tmp2;
+        tmp_shared_block[ty][4] = b0 - b1;
+        tmp_shared_block[ty][6] = VALUE_MINUS_1_847759065 * b2 + tmp2;
         c4 = b4 + b6;
         c5 = b7 - b5;
         c6 = b4 - b6;
         c7 = b5 + b7;
 
         // Stage 4 contains 2 mults + 2 adds
-        shared_block[ty][1] = c4 + c7;
-        shared_block[ty][3] = c5 * VALUE_1_414213562;
-        shared_block[ty][5] = c6 * VALUE_1_414213562;
-        shared_block[ty][7] = c7 - c4;
+        tmp_shared_block[ty][1] = c4 + c7;
+        tmp_shared_block[ty][3] = c5 * VALUE_1_414213562;
+        tmp_shared_block[ty][5] = c6 * VALUE_1_414213562;
+        tmp_shared_block[ty][7] = c7 - c4;
     }
 
     // synchronize to ensure all threads have completed the row-wise DCT before doing the column-wise DCT
@@ -146,14 +126,14 @@ __global__ void encoding_gpu(int16_t *d_mcus_array, uint8_t luminance)
         /* Column-wise DCT */
         // ty == column => Each thread is assigned to a column in a block which corresponds to their id
         // Stage 1 contains 8 adds
-        a0 = shared_block[0][ty] + shared_block[7][ty];
-        a1 = shared_block[1][ty] + shared_block[6][ty];
-        a2 = shared_block[2][ty] + shared_block[5][ty];
-        a3 = shared_block[3][ty] + shared_block[4][ty];
-        a4 = shared_block[3][ty] - shared_block[4][ty];
-        a5 = shared_block[2][ty] - shared_block[5][ty];
-        a6 = shared_block[1][ty] - shared_block[6][ty];
-        a7 = shared_block[0][ty] - shared_block[7][ty];
+        a0 = tmp_shared_block[0][ty] + tmp_shared_block[7][ty];
+        a1 = tmp_shared_block[1][ty] + tmp_shared_block[6][ty];
+        a2 = tmp_shared_block[2][ty] + tmp_shared_block[5][ty];
+        a3 = tmp_shared_block[3][ty] + tmp_shared_block[4][ty];
+        a4 = tmp_shared_block[3][ty] - tmp_shared_block[4][ty];
+        a5 = tmp_shared_block[2][ty] - tmp_shared_block[5][ty];
+        a6 = tmp_shared_block[1][ty] - tmp_shared_block[6][ty];
+        a7 = tmp_shared_block[0][ty] - tmp_shared_block[7][ty];
 
         // Stage 2 contains 6 mult + 10 adds
         b0 = a0 + a3;
@@ -212,14 +192,12 @@ void encoding(int16_t *h_mcus_array, int16_t *d_mcus_array, uint32_t nb_mcus, si
 
     const dim3 block_size(8, 8);
     const dim3 grid_size(nb_mcus);
-    // printf("Encoding in GPU starting\n");
+    // 64 threads per block, 1 block per MCUs
+    // Starting kernel
     encoding_gpu<<<grid_size, block_size>>>(d_mcus_array, (uint8_t)luminance);
-    // printf("Encoding in GPU done\n");
     gpuErrchk(cudaPeekAtLastError());
 
     // Copy data from the device to host (GPU -> CPU)
     // Acts a synchronization making sure all threads are done
-    // printf("Starting copy from GPU to CPU\n");
     gpuErrchk(cudaMemcpy(h_mcus_array, d_mcus_array, array_size, cudaMemcpyDeviceToHost));
-    // printf("Copy from GPU to CPU done\n");
 }

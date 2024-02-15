@@ -10,25 +10,29 @@
 #include "bitstream.h"
 #include "encoding.cuh"
 
+// Macro for checking CUDA errors
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
+// Function for handling CUDA errors
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
-   if (code != cudaSuccess) 
-   {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
+    // Check if the CUDA function call resulted in an error
+    if (code != cudaSuccess) {
+        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) {
+            exit(code);
+        }
+    }
 }
 
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
-    on traite chaque MCU intégralement, en effectuant les transformations successives,
-    avant de passer à la suivante.
+    on alloue le plus de MCUs possibles puis on effectue en parallèle
+    les transformations successives.
 */
 extern "C"
 void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
-    // TODO => Check memoire sur les mallocs/callocs
     uint32_t nb_mcu_column = height / 8; // Nombre de MCUs par colonne
     uint32_t nb_mcu_line = width / 8; // Nombre de MCUs par ligne
 
@@ -63,7 +67,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
             nb_mcus_line_allocated++;
         }
     }
-    printf("Nombre de lignes de MCUs alloué: %u, Nombre de lignes de MCUs: %u\n", nb_mcus_line_allocated, nb_mcu_column);
+    // printf("Nombre de lignes de MCUs alloué: %u, Nombre de lignes de MCUs: %u\n", nb_mcus_line_allocated, nb_mcu_column);
+
     // Allocate memory on the device
     int16_t *d_mcus_array;
     gpuErrchk(cudaMalloc(&d_mcus_array, mcus_array_size));
@@ -72,11 +77,15 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     int16_t *predicator = (int16_t *) calloc(1, sizeof(int16_t));
 
     uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
-    printf("nb mcus allocated: %u\n", nb_mcus_allocated);
+    // printf("nb mcus allocated: %u\n", nb_mcus_allocated);
 
+    /* On parcourt toutes les allocations (Si l'image est trop grande, il est possible que le
+    malloc n'englobe pas l'entiereté du fichier mais soit divisé en plusieurs parties) */
     for (uint16_t nb_alloc = 0; nb_alloc < nb_mcu_column / nb_mcus_line_allocated; ++nb_alloc) {
         // printf("Current number alloc: %u\n", nb_alloc);
+        /* Puis on parcourt chaque ligne de MCUs dans la partie allouée */
         for (uint32_t mcu_line = 0; mcu_line < nb_mcus_line_allocated && nb_alloc * nb_mcus_line_allocated + mcu_line < nb_mcu_column; mcu_line++) {
+            /* Dans cette partie, on traite chaque MCU dans la ligne de MCUs en traitant les troncatures */
             // printf("Current mcu line: %u\n", mcu_line);
             uint32_t global_mcu_line = mcu_line + nb_alloc * nb_mcus_line_allocated;
             uint32_t mcu_line_offset = mcu_line * 8 * mcus_line_array_width;
@@ -134,11 +143,9 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                 }
             }
         }
-        // TODO
         // Call GPU
         encoding(mcus_array, d_mcus_array, nb_mcus_allocated, mcus_array_size, true);
-        // Take result from GPU
-        // Call coding from results of GPU
+        // Call coding from results of GPU stored in mcus_array
         coding_mcus(mcus_array, nb_mcus_allocated, ht_dc, ht_ac, stream, predicator, index);
     }
     /* On libère tous les espaces mémoire alloués. */
@@ -148,12 +155,16 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     free(index);
 }
 
+/*
+    Dans cette fonction qui s'occupe des images en couleur,
+    on alloue le plus de MCUs possibles puis on effectue en parallèle
+    les transformations successives.
+*/
 extern "C"
 void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
                         struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
                         struct bitstream *stream, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
 {
-    // TODO
     uint8_t width_mcu = 8*h1; // Nombre de pixels sur une ligne d'une MCU
     uint8_t height_mcu = 8*v1;  // Nombre de pixels sur une colonne d'une MCU.
 
@@ -175,10 +186,11 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
         tronc_right = 1; // Il y a troncature à droite.
     }
 
+    /* On alloue tous les espaces mémoire nécessaires. */
     uint16_t mcus_line_array_width = width_remainder == 0 ? width : width + width_mcu - width_remainder;
     uint16_t mcus_array_height = height_remainder == 0 ? height : height + height_mcu - height_remainder;
     size_t mcus_array_size = mcus_array_height * mcus_line_array_width * 3 * sizeof(int16_t);
-    int16_t *mcus_array = (int16_t *) malloc(mcus_array_size);
+    int16_t *mcus_array = (int16_t *) malloc(mcus_array_size); // On stocke
     uint16_t nb_mcus_line_allocated = nb_mcu_column; // Nombre de ligne de MCUs alloué
     while (mcus_array == NULL) {
         printf("malloc for mcus line array failed\n");
@@ -209,11 +221,15 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint8_t Cr;
 
     uint32_t nb_mcus_allocated = nb_mcus_line_allocated * nb_mcu_line;
-    printf("nb mcus allocated: %u\n", nb_mcus_allocated);
+    // printf("nb mcus allocated: %u\n", nb_mcus_allocated);
 
+    /* On parcourt toutes les allocations (Si l'image est trop grande, il est possible que le
+    malloc n'englobe pas l'entiereté du fichier mais soit divisé en plusieurs parties) */
     for (uint16_t nb_alloc = 0; nb_alloc < nb_mcu_column / nb_mcus_line_allocated; ++nb_alloc) {
         // printf("Current number alloc: %u\n", nb_alloc);
+        /* Puis on parcourt chaque ligne de MCUs dans la partie allouée */
         for (uint32_t mcu_line = 0; mcu_line < nb_mcus_line_allocated && nb_alloc * nb_mcus_line_allocated + mcu_line < nb_mcu_column; mcu_line++) {
+            /* Dans cette partie, on traite chaque MCU dans la ligne de MCUs en traitant les troncatures */
             // printf("Current mcu line: %u\n", mcu_line);
             uint32_t global_mcu_line = mcu_line + nb_alloc * nb_mcus_line_allocated;
             uint32_t mcu_line_offset = mcu_line * 8 * mcus_line_array_width * 3;
@@ -233,7 +249,6 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     if (tronc_right) {
                         uint8_t column_index = column % width_mcu;
                         for (uint8_t column_offset = column_index; column_offset < width_mcu; ++column_offset) {
-                            // TODO => Modifier accès en fonction de la taille des MCUs et rajouter Cb et Cr
                             // On copie la valeur précédente pour remplir le reste de la ligne
                             uint32_t row_in_last_mcu = mcu_line_offset + (nb_mcu_line - 1) * 64 * 3 + line * height_mcu;
                             uint32_t mcu_pixel = row_in_last_mcu + column_offset;
@@ -287,7 +302,6 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     if (tronc_right) {
                         uint8_t column_index = column % width_mcu;
                         for (uint8_t column_offset = column_index; column_offset < width_mcu; ++column_offset) {
-                            // TODO => Modifier accès en fonction de la taille des MCUs et rajouter Cb et Cr
                             // On copie la valeur précédente pour remplir le reste de la ligne
                             uint32_t row_in_last_mcu = mcu_line_offset + (nb_mcu_line - 1) * 64 * 3 + line * height_mcu;
                             uint32_t mcu_pixel = row_in_last_mcu + column_offset;
@@ -300,13 +314,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                 }
             }
         }
-        // TODO
-        // Give size to allocate on GPU
-
         // Call GPU
         encoding(mcus_array, d_mcus_array, nb_mcus_allocated*3, mcus_array_size, true);
-        // Take result from GPU
-        // Call coding from results of GPU
+        // Call coding from results of GPU stored in mcus_array
         coding_mcus_Y_Cb_Cr(mcus_array, nb_mcus_allocated, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, stream, predicator_Y, predicator_Cb, predicator_Cr, index);
     }
     /* On libère tous les espaces mémoire alloués. */

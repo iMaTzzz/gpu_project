@@ -122,6 +122,7 @@ void coding(int16_t *bloc_array, struct huff_table *ht_dc, struct huff_table *ht
     }
 }
 
+/* Fonction qui encode le coefficient DC et les coefficients AC de plusieurs MCUs */
 void coding_mcus(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc, struct huff_table *ht_ac,
                       struct bitstream *stream, int16_t *predicator, uint16_t *index)
 {
@@ -182,10 +183,11 @@ void coding_mcus(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc
             bitstream_write_bits(stream, path, nb_bits, 0);
             // printf("value = endofblock, huffman_path = %i, nb_bits = %hhu\n", path, nb_bits);
         }
-    offset += 64;
+    offset += 64; // We increment the offset by 64 to handle the next mcu.
     }
 }
 
+/* Fonction qui encode le coefficient DC et les coefficients AC d'une MCU d'une image en couleur */
 static void coding_mcus_per_component(int16_t *mcus_array, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream, int16_t *predicator, uint16_t *index, uint64_t offset)
 {
     /* On encode d'abord le coefficient DC */
@@ -244,6 +246,7 @@ static void coding_mcus_per_component(int16_t *mcus_array, struct huff_table *ht
     }
 }
 
+/* Fonction qui encode le coefficient DC et les coefficients AC de plusieurs MCUs d'une image en couleur */
 void coding_mcus_Y_Cb_Cr(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc_Y,
                               struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C,
                               struct bitstream *stream, int16_t *predicator_Y, int16_t *predicator_Cb,
@@ -253,12 +256,12 @@ void coding_mcus_Y_Cb_Cr(int16_t *mcus_array, uint32_t nb_mcus, struct huff_tabl
     for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
         // Y
         coding_mcus_per_component(mcus_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index, offset);
-        offset += 64;
+        offset += 64; // We increment the offset by 64 to handle the next mcu.
         // Cb
         coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index, offset);
-        offset += 64;
+        offset += 64; // We increment the offset by 64 to handle the next mcu.
         // Cr
         coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index, offset);
-        offset += 64;
+        offset += 64; // We increment the offset by 64 to handle the next mcu.
     }
 }
