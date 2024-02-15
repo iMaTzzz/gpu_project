@@ -257,6 +257,10 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
 
     uint32_t mcu_index = 0;
 
+    // size_t mcus_array_size = mcus_array_height * mcus_line_array_width * 3 * sizeof(int16_t);
+    // int16_t *mcus_array = (int16_t *) malloc(mcus_array_size);
+    int16_t *mcus_array = malloc(5100 * 64 * 3 * sizeof(int16_t));
+
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
     for (uint32_t i = 0; i < line_mcu; i++) {
         //printf("i = %i\n", i);
@@ -342,6 +346,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
 
+                    for (uint8_t i = 0; i < 64; i++) {
+                        mcus_array[mcu_index * 3 * 64 + i] = bloc_array[i];
                     }
 
                     // printf("--- mcu Y ---\n");
@@ -381,6 +387,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
 
+                    for (uint8_t i = 0; i < 64; i++) {
+                        mcus_array[mcu_index * 3 * 64 + 64 + i] = bloc_array[i];
                     }
 
                     // printf("--- mcu Cb ---\n");
@@ -421,6 +429,8 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
 
+                    for (uint8_t i = 0; i < 64; i++) {
+                        mcus_array[mcu_index * 3 * 64 + 128 + i] = bloc_array[i];
                     }
 
                     // printf("--- mcu Cr ---\n");
@@ -452,6 +462,11 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
             }
         }
     }
+
+    for (uint32_t i = 0; i < 5100 * 64 * 3; i++) {
+        printf("%d\n", mcus_array[i]);
+    }
+
     /* On libère tous les espaces mémoire alloués. */
     free_mcu(mcu_Y, height_mcu);
     free_mcu(mcu_Cb, height_mcu);
