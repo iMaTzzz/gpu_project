@@ -89,6 +89,7 @@ bool read_parameters(FILE *input, uint32_t *width, uint32_t *height)
 static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
 {
     printf("filename in ppm2jpeg:%s\n", ppm_filename);
+    printf("jpg_new_filename in ppm2jpeg:%s\n", jpg_new_filename);
     clock_t start, end;
     start = clock();
     FILE *input = fopen(ppm_filename, "r");
