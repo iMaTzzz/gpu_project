@@ -216,6 +216,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                     printf("%u\n", i);
                     char* jpg_new_filename = malloc(50 * sizeof(char));
                     strcpy(jpg_new_filename, entry->d_name);
+                    printf("jpg_new_filename: %s\n", jpg_new_filename);
                     // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
                     // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
                     double tmp_cpu = ppm2jpeg(filename, jpg_new_filename, true, h1, v1, h2, v2, h3, v3); // on CPU
