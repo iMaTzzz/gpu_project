@@ -40,6 +40,8 @@ The JPEG Encoder is designed to efficiently compress images into the JPEG format
     ```
 
 3. **Run the Encoder**: After building the project, you can run the JPEG encoder on the provided images.
+Please note that when executing the GPU version on a single image, we refrain from including any warm-up procedure. Consequently, the observed runtime may appear slower compared to the results obtained from benchmark tests.
+
 Here are three examples (Code is provided below):
     - If you want to run the CPU version on an image located in the *images* directory (First example)
     - If you want to run the GPU version on an image located in the *images* directory (Second example)
