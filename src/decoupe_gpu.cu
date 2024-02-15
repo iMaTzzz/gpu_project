@@ -32,6 +32,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 extern "C"
 void treat_image_grey_gpu(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
+    printf("GPU\n");
     uint32_t nb_mcu_column = height / 8; // Nombre de MCUs par colonne
     uint32_t nb_mcu_line = width / 8; // Nombre de MCUs par ligne
 
