@@ -63,7 +63,7 @@ static uint8_t code_RLE(uint8_t count_zero, uint8_t magnitude_ac)
 }
 
 /* Fonction qui encode le coefficient DC et les coefficients AC d'un bloc */
-void coding(int16_t *bloc_array, struct huff_table *ht_dc, struct huff_table *ht_ac,
+void coding_o(int16_t *bloc_array, struct huff_table *ht_dc, struct huff_table *ht_ac,
             struct bitstream *stream, int16_t *predicator, uint16_t *index)
 {
     /* On encode d'abord le coefficient DC */
@@ -244,21 +244,90 @@ static void coding_mcus_per_component(int16_t *mcus_array, struct huff_table *ht
     }
 }
 
+/* Fonction qui encode le coefficient DC et les coefficients AC d'un bloc */
+void coding(int16_t *array, struct huff_table *ht_dc, struct huff_table *ht_ac, 
+            struct bitstream *stream, int16_t *predicator, uint16_t *index)
+{
+    /* On encode d'abord le coefficient DC */
+    uint8_t magnitude_dc = magnitude(array[0] - *predicator);
+    index_in_magnitude(array[0] - *predicator, magnitude_dc, index);
+    uint8_t nb_bits;
+    uint32_t path = huffman_table_get_path(ht_dc, magnitude_dc, &nb_bits);
+    /* On écrit dans le bitstream le chemin de huffman de la magnitude puis l'indice de la valeur */
+    bitstream_write_bits(stream, path, nb_bits, 0);
+    bitstream_write_bits(stream, *index, magnitude_dc, 0);
+    *predicator = array[0];
+    // printf("value = %i, magnitude = %i, index = %hu, path  = %u\n, 
+    //         nb_bits = %hhu\n", array[0] - *predicator, magnitude_dc, *index, path, magnitude_dc);
+    
+    /* Ensuite, on encode les 63 coefficients AC */
+    uint8_t count_zero = 0;
+    for (uint8_t i = 1; i < 64; i++) {
+        if (array[i] == 0) { 
+        /* Si le coefficient est nul, on incrémente le compteur de zero */
+            count_zero++;
+        } else {
+        /* Sinon, on écrit autant de fois le chemin de huffman de ZRL qu'il le faut en fonction du nombre de zero */
+            if (count_zero >= 16) {
+                while (count_zero >= 16) {
+                    path = huffman_table_get_path(ht_ac, 240, &nb_bits); // F0 = 240
+                    bitstream_write_bits(stream, path, nb_bits, 0); 
+                    count_zero -= 16;
+                    // printf("value = zrl, huffman_path = %i, nb_bits = %hhu\n", path, nb_bits);
+                }
+            }
+            /* On encode maintenant le code RLE du coefficient puis l'indice du coefficient */
+            uint8_t magnitude_ac = magnitude(array[i]);
+            uint8_t RLE = code_RLE(count_zero, magnitude_ac);
+            uint32_t path = huffman_table_get_path(ht_ac, RLE, &nb_bits);
+            bitstream_write_bits(stream, path, nb_bits, 0);
+
+            index_in_magnitude(array[i], magnitude_ac, index);
+            bitstream_write_bits(stream, *index, magnitude_ac, 0);
+            // printf("value = %i, magnitude = %i, index = %hhu\n", array[i], magnitude_ac, *index);
+            // printf("RLE code = %i, huffman path = %u, nb_bits = %hhu\n", RLE, path, nb_bits);
+            count_zero = 0; //On oublie pas de reset le compteur à zero
+        }
+    }
+    /* Si on arrive à la fin du bloc et que le compteur est non nul, alors on encode End Of Block */
+    if (count_zero != 0) {
+        path = huffman_table_get_path(ht_ac, 0, &nb_bits);
+        bitstream_write_bits(stream, path, nb_bits, 0);
+        // printf("value = endofblock, huffman_path = %i, nb_bits = %hhu\n", path, nb_bits);
+    }
+} 
+
 void coding_mcus_Y_Cb_Cr(int16_t *mcus_array, uint32_t nb_mcus, struct huff_table *ht_dc_Y,
                               struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C,
                               struct bitstream *stream, int16_t *predicator_Y, int16_t *predicator_Cb,
                               int16_t *predicator_Cr, uint16_t *index)
 {
-    uint64_t offset = 0; 
+    // uint64_t offset = 0; 
+    // for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
+    //     // Y
+    //     coding_mcus_per_component(mcus_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index, offset);
+    //     offset += 64;
+    //     // Cb
+    //     coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index, offset);
+    //     offset += 64;
+    //     // Cr
+    //     coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index, offset);
+    //     offset += 64;
+    // }
+
+    int16_t one_mcu[64];
     for (uint32_t mcu_index = 0; mcu_index < nb_mcus; ++mcu_index) {
         // Y
-        coding_mcus_per_component(mcus_array, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index, offset);
-        offset += 64;
+        memcpy(one_mcu, &mcus_array[mcu_index * 3 * 64], 64 * sizeof(int16_t));
+        coding(one_mcu, ht_dc_Y, ht_ac_Y, stream, predicator_Y, index);
+
         // Cb
-        coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index, offset);
-        offset += 64;
+        memcpy(one_mcu, &mcus_array[mcu_index * 3 * 64 + 64], 64 * sizeof(int16_t));
+        coding(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cb, index);
+
         // Cr
-        coding_mcus_per_component(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index, offset);
-        offset += 64;
+        memcpy(one_mcu, &mcus_array[mcu_index * 3 * 64 + 128], 64 * sizeof(int16_t));
+        coding(mcus_array, ht_dc_C, ht_ac_C, stream, predicator_Cr, index);
     }
+
 }
