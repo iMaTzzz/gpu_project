@@ -143,7 +143,6 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
         huffman_table_destroy(ht_ac_C);
 
     } else { //Cas Y
-        printf("width: %u, height: %u\n", width, height);
         // printf("Le type de fichier lu est : P5\n");
 
         /* On crée les tables de huffman pour la composante Y */
