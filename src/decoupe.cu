@@ -338,7 +338,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
         // Give size to allocate on GPU
 
         // Call GPU
-        encoding(mcus_array, d_mcus_array, nb_mcus_allocated*3, mcus_array_size, true);
+        //encoding(mcus_array, d_mcus_array, nb_mcus_allocated*3, mcus_array_size, true);
 
         get_file_values(mcus_array);
         // print MCUs line

@@ -5,6 +5,7 @@
 #include "huffman.h"
 #include "bitstream.h"
 #include "htables.h"
+#include <string.h>
 
 /* Fonction qui code le nombre de bits nécessaire pour coder un entier */
 static uint8_t number_of_bits(int16_t integer)
