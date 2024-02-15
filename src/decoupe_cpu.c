@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "quantification.h"
 #include "coding.h"
-#include "dct.h"
+#include "dct_cpu.h"
 #include "jpeg_writer.h"
 #include "rgb_to_ycbcr.h"
 #include "downsampling.h"
@@ -27,79 +27,12 @@ static void free_mcu(uint8_t **mcu, uint8_t heigth) {
     free(mcu);
 }
 
-// static int16_t **allocate_matrix_uint16() 
-// {
-//     int16_t **matrix = malloc(8 * sizeof(int16_t *));
-//     for (int row = 0; row < 8; row++) {
-//         matrix[row] = malloc(8 * sizeof(int16_t));
-//     }
-//     return matrix;
-// }
-
-// void print_matrix_8(uint8_t **matrix)
-// {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hhx\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-//     printf("\n");
-// }
-
-// static void print_matrix_16(int16_t **matrix)
-// {
-//     for (int i = 0; i < 8; i++) {
-//         for (int j = 0; j < 8; j++) {
-//             printf("%04hx\t", matrix[i][j]);
-//             // printf("%hi\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-// }
-
-// static void print_array_16(int16_t *array)
-// {
-    // for (int i = 0; i < 8; i++) {
-        // for (int j = 0; j < 8; j++) {
-            // printf("%04hx\t", array[i*8+j]);
-            // // printf("%hi\t", array[i*8+j]);
-        // }
-        // printf("\n");
-    // }
-// }
-
-// static void print_matrix_mcu(uint8_t **matrix, uint8_t width, uint8_t heigth)
-// {
-//     for (int i = 0; i < heigth; i++) {
-//         if (i == 8) {
-//             printf("\n");
-//         }
-//         for (int j = 0; j < width; j++) {
-//             if (j == 8) {
-//                 printf("\t");
-//             }
-//              printf("%02hhx\t", matrix[i][j]);
-//             // printf("%hhu\t", matrix[i][j]);
-//         }
-//         printf("\n");
-//     }
-//     printf("\n");
-// }
-
-// static void free_matrix(int16_t **matrix) {
-//     for (int row = 0; row < 8; row++) {
-//         free(matrix[row]);
-//     }
-//     free(matrix);
-// }
-
 /*
     Dans cette fonction qui s'occupe des images en noir et blanc,
     on traite chaque MCU intégralement, en effectuant les transformations successives,
     avant de passer à la suivante. 
 */
-void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
+void treat_image_grey_cpu(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc, struct huff_table *ht_ac, struct bitstream *stream)
 {
     /* On alloue tous les espaces mémoire nécessaires. */
     uint16_t *index = malloc(sizeof(uint16_t));
@@ -120,8 +53,8 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
         column_mcu++; // On rajoute une colonne de MCUs.
         tronc_column = 1; // Il y a troncature à droite.
     }
-    printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
-    printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
+    // printf("Tronc_line = %u, Tronc_column = %u\n", tronc_line, tronc_column);
+    // printf("Nombre de mcu par ligne : %i, Nombre de mcu par colonne : %i\n", column_mcu, line_mcu);
     bool tronc_line_mcu; // Indique si il y a une troncature en bas dans la MCU courante.
     bool tronc_column_mcu; // Indique si il y a une troncature à droite dans la MCU courante.
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
@@ -184,8 +117,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
                     }
                 }
             }
-            // dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
-            dct_loeffler_better(mcu, mcu_array);
+            cpu_dct_loeffler(mcu, mcu_array); // On transforme la MCU en tableau, en appliquant la DCT.
             // print_array_16(mcu_array);
             quantify(mcu_array, true); // On applique la quantification.
             // print_array_16(mcu_array);
@@ -215,7 +147,7 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     on traite chaque MCU intégralement, en effectuant les transformations successives (avec un éventuel sous-échantillonnage),
     avant de passer à la suivante. 
 */
-void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
+void treat_image_color_cpu(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
                         struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
                         struct bitstream *stream, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
 {
@@ -254,6 +186,9 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
     uint8_t red;
     uint8_t green;
     uint8_t blue;
+    uint8_t Y;
+    uint8_t Cb;
+    uint8_t Cr;
     /* On parcourt successivement les différentes MCUs (ligne par ligne et de gauche à droite). */
     for (uint32_t i = 0; i < line_mcu; i++) {
         //printf("i = %i\n", i);
@@ -297,9 +232,10 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         red = fgetc(image);
                         green = fgetc(image);
                         blue = fgetc(image);
-                        mcu_Y[k][l] = rgb_to_ycbcr(red, green, blue, Y);
-                        mcu_Cb[k][l] = rgb_to_ycbcr(red, green, blue, Cb);
-                        mcu_Cr[k][l] = rgb_to_ycbcr(red, green, blue, Cr);
+                        rgb_to_ycbcr(red, green, blue, &Y, &Cb, &Cr);
+                        mcu_Y[k][l] = Y;
+                        mcu_Cb[k][l] = Cb;
+                        mcu_Cr[k][l] = Cr;
                         // printf("%ld\n", ftell(image));
                     }
                 }
@@ -334,8 +270,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                             bloc[m][n] = mcu_Y[8*k+m][8*l+n];
                         }
                     }
-                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    dct_loeffler_better(bloc, bloc_array);
+                    cpu_dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
                     // print_array_16(mcu_array);
                     quantify(bloc_array, true); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -360,8 +295,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         }
                     }
                     //print_matrix_8(mcu_Cb);
-                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    dct_loeffler_better(bloc, bloc_array);
+                    cpu_dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);
@@ -387,8 +321,7 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
                         }
                     }
                     //print_matrix_8(mcu_Cb);
-                    //dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
-                    dct_loeffler_better(bloc, bloc_array);
+                    cpu_dct_loeffler(bloc, bloc_array); // On transforme le bloc en tableau, en appliquant la DCT.
                     // print_array_16(mcu_array);
                     quantify(bloc_array, false); // On applique la quantification au bloc.
                     // print_array_16(mcu_array);

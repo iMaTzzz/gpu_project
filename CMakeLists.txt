@@ -3,7 +3,16 @@ project(gpu_project LANGUAGES C CUDA)
 
 # Set C and CUDA compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99 -O2")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Iinclude")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wall -Iinclude")
+
+# Define an option for enabling debug mode
+option(DEBUG_MODE "Enable debug mode" OFF)
+
+# Set compiler flags based on debug mode
+if(DEBUG_MODE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
 
 # Include directories
 include_directories(include)
@@ -66,3 +75,8 @@ link_directories(/usr/local/cuda/lib64)
 # Add clean target
 # set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${OBJ_FILES};${CUDA_OBJ_FILES};ppm2jpeg")
 
+# Custom target for enabling debug mode
+add_custom_target(debug
+    COMMAND ${CMAKE_COMMAND} -DDEBUG_MODE=ON ${CMAKE_SOURCE_DIR}
+    COMMENT "Enabling debug mode"
+)

@@ -5,27 +5,33 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include "dct.h"
+#include <stdbool.h>
+#include <time.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "coding.h"
 #include "htables.h"
 #include "huffman.h"
+#include "jpeg_header.h"
 #include "jpeg_writer.h"
 #include "bitstream.h"
-#include "jpeg_header.h"
-#include "decoupe.h"
+#include "decoupe_cpu.h"
+#include "decoupe_gpu.cuh"
 #include "rgb_to_ycbcr.h"
-#include <stdbool.h>
-#include <time.h>
-
 
 static void verif_params(char **argv)
 {
-    fprintf(stderr, "Usage: %s --help --outfile=ouput.jpg --sample=h1xv1,h2xv2,h3xv3 input.ppm \n", argv[0]);
+    fprintf(stderr, "Usage: %s --help --gpu --outfile=ouput.jpg --sample=h1xv1,h2xv2,h3xv3 input.ppm \n", argv[0]);
     fprintf(stderr, "où:\n");
     fprintf(stderr, "\t- --help affiche la liste des options acceptées ;\n");
-    fprintf(stderr, "\t- --outfile=ouput.jpg pour rédifinir le nom du fichier de sortie ;\n");
+    fprintf(stderr, "\t- --gpu pour utiliser la version parallèle en utilisant le GPU, par défaut la version CPU est utilisée ;\n");
+    fprintf(stderr, "\t- --outfile=ouput.jpg pour rédéfinir le nom du fichier de sortie ;\n");
     fprintf(stderr, "\t- --sample=h1xv1,h2xv2,h3xv3 pour définir les facteurs d'échantillonnage hxv des trois composantes de couleur ;\n");
     fprintf(stderr, "\t- input.ppm est le nom du fichier ppm à convertir ;\n");
+    fprintf(stderr, "___________________________________________________________________ \n");
+    fprintf(stderr, "Usage: %s --test:relative_directory_path \n", argv[0]);
+    fprintf(stderr, "où:\n");
+    fprintf(stderr, "\t- --test:relative_directory_path pour tester toutes les images dans le directory sur les deux versions ;\n");
     exit(EXIT_FAILURE);
 }
 
@@ -81,11 +87,160 @@ bool read_parameters(FILE *input, uint32_t *width, uint32_t *height)
     return verif;
 }
 
-
-int main(int argc, char **argv)
+static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
 {
     clock_t start, end;
     start = clock();
+    FILE *input = fopen(ppm_filename, "r");
+    if (input == NULL) {
+        perror("Ouverture du fichier d'entrée n'a pas marché");
+        exit(EXIT_FAILURE);
+    }
+    uint32_t width;
+    uint32_t height;
+    if (read_parameters(input, &width, &height)) { //Cas RGB
+        // printf("Le type de fichier lu est : P6\n");
+
+        /* On crée les tables de huffman pour les composantes Y et Cb/Cr */
+        struct huff_table *ht_dc_Y = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
+                                          htables_symbols[DC][Y], htables_nb_symbols[DC][Y]);
+        struct huff_table *ht_ac_Y = huffman_table_build(htables_nb_symb_per_lengths[AC][Y],
+                                          htables_symbols[AC][Y], htables_nb_symbols[AC][Y]);
+        struct huff_table *ht_dc_C = huffman_table_build(htables_nb_symb_per_lengths[DC][Cb], 
+                                        htables_symbols[DC][Cb], htables_nb_symbols[DC][Cb]);
+        struct huff_table *ht_ac_C = huffman_table_build(htables_nb_symb_per_lengths[AC][Cb], 
+                                        htables_symbols[AC][Cb], htables_nb_symbols[AC][Cb]);
+
+        /* On crée le fichier de sortie en commençant par écrire son header */
+        struct jpeg *jpg;
+        if (jpg_new_filename == NULL) {
+            char jpg_filename[] = "default.jpg";
+            jpg = write_jpeg_color_header(ppm_filename, jpg_filename, width, height,
+                         ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, h1, v1, h2, v2, h3, v3);
+        } else {
+            jpg = write_jpeg_color_header(ppm_filename, jpg_new_filename, width, height,
+                         ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, h1, v1, h2, v2, h3, v3);
+        }
+        
+        /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
+        struct bitstream *stream = jpeg_get_bitstream(jpg);
+        if (cpu) {
+            treat_image_color_cpu(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
+                            stream, h1, v1, h2, v2, h3, v3);
+        } else {
+            treat_image_color_gpu(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
+                            stream, h1, v1, h2, v2, h3, v3);
+        }
+
+        /* On écrit le footer pour finaliser le fichier jpeg */
+        jpeg_write_footer(jpg);
+
+        /* Enfin on détruit tout */
+        jpeg_destroy(jpg);
+        huffman_table_destroy(ht_dc_Y);
+        huffman_table_destroy(ht_ac_Y);
+        huffman_table_destroy(ht_dc_C);
+        huffman_table_destroy(ht_ac_C);
+
+    } else { //Cas Y
+        // printf("Le type de fichier lu est : P5\n");
+
+        /* On crée les tables de huffman pour la composante Y */
+        struct huff_table *ht_dc = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
+                                        htables_symbols[DC][Y], htables_nb_symbols[DC][Y]);
+        struct huff_table *ht_ac = huffman_table_build(htables_nb_symb_per_lengths[AC][Y], 
+                                        htables_symbols[AC][Y], htables_nb_symbols[AC][Y]);
+        struct jpeg *jpg;
+
+        /* On crée le fichier de sortie en commençant par écrire son header */
+        if (jpg_new_filename == NULL) {
+            char jpg_filename[] = "default.jpg";
+            jpg = write_jpeg_gris_header(ppm_filename, jpg_filename, width, height, ht_dc, ht_ac);
+        } else {
+            jpg = write_jpeg_gris_header(ppm_filename, jpg_new_filename, width, height, ht_dc, ht_ac);
+        }
+
+        /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
+        struct bitstream *stream = jpeg_get_bitstream(jpg);
+        if (cpu) {
+            treat_image_grey_cpu(input, width, height, ht_dc, ht_ac, stream);
+        } else {
+            treat_image_grey_gpu(input, width, height, ht_dc, ht_ac, stream);
+        }
+        
+        /* On écrit le footer pour finaliser le fichier jpeg */
+        jpeg_write_footer(jpg);
+
+        /* Enfin on détruit tout */
+        jpeg_destroy(jpg);
+        huffman_table_destroy(ht_dc);
+        huffman_table_destroy(ht_ac);
+    }
+    fclose(input);
+
+    // On libère le nouveau nom du fichier de sortie s'il existe.
+    if (jpg_new_filename != NULL) {
+        free(jpg_new_filename);
+    }
+    end = clock();
+    return ((double) end - start) / CLOCKS_PER_SEC;
+}
+
+static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8_t v2, uint8_t h3, uint8_t v3)
+{
+    DIR *dir = opendir(dir_path);
+    if (dir == NULL) {
+        perror("Failed to open directory");
+        exit(EXIT_FAILURE);
+    }
+    struct dirent *entry;
+    uint8_t image_nb = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        // Process each file
+        double mean_time_taken_cpu = 0;
+        double mean_time_taken_gpu = 0;
+        if (entry->d_type == DT_REG) { // Check if it's a regular file
+            // Check if the file name ends with ".ppm" or ".pgm"
+            size_t len = strlen(entry->d_name);
+            if ((len > 4) && (strcmp(entry->d_name + len - 4, ".ppm") == 0 || strcmp(entry->d_name + len - 4, ".pgm") == 0)) {
+                char filename[1024]; // Assuming max file name length is 1024 characters
+                snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
+                // Get the size of the file
+                struct stat st;
+                if (stat(filename, &st) == -1) {
+                    perror("Failed to get file size");
+                    continue; // Skip to the next file
+                }
+                long file_size = st.st_size;
+                uint8_t nb_of_tests = 10;
+                if (image_nb == 0) {
+                    // DO GPU WARMUP
+                    ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                }
+                for (uint8_t i = 0; i < nb_of_tests; ++i) {
+                    // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
+                    // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                    double tmp_cpu = ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
+                    double tmp_gpu = ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
+                    printf("time_cpu: %f, time_gpu: %f\n", tmp_cpu, tmp_gpu);
+                    mean_time_taken_cpu += tmp_cpu;
+                    mean_time_taken_gpu += tmp_gpu;
+                }
+                mean_time_taken_cpu /= nb_of_tests;
+                mean_time_taken_gpu /= nb_of_tests;
+                printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
+                image_nb += 1;
+            }
+        }
+    }
+
+    closedir(dir);
+    free(dir_path);
+}
+
+
+int main(int argc, char **argv)
+{
     /* On initialise les valeurs de sous-échantillonnage */
     uint8_t h1 = 1;
     uint8_t v1 = 1;
@@ -93,6 +248,11 @@ int main(int argc, char **argv)
     uint8_t v2 = 1;
     uint8_t h3 = 1;
     uint8_t v3 = 1;
+    /* Par défaut, on utilise la version cpu */
+    bool cpu = true;
+    /* On initialise les variables pour pouvoir lancer les tests */
+    bool test = false;
+    char* dir_path;
     char *jpg_new_filename = NULL;
     if (argc < 2) {
         verif_params(argv);// On affiche la notice s'il n'y a pas au moins 2 paramètres en entrée.
@@ -100,6 +260,8 @@ int main(int argc, char **argv)
     for (uint8_t i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0) {
             verif_params(argv);// On affiche la notice pour l'utilisation de ppm2jpeg
+        } else if (strncmp(argv[i], "--gpu", 5) == 0) {
+            cpu = false;
         } else if (strncmp(argv[i], "--outfile=", 10) == 0) {
             /* On alloue le nouveau nom du fichier de sortie */
             uint8_t taille = strlen(argv[i]) - 10;
@@ -159,105 +321,26 @@ int main(int argc, char **argv)
                 index++;
             }
             verify_sampling_values(h1, v1, h2, v2, h3, v3);
-        }
+        } else if (strncmp(argv[i], "--test=", 7) == 0) {
+            test = true;
+            uint8_t taille = strlen(argv[i]) - 7;
+            dir_path = malloc(taille+1);
+            
+            for (uint8_t j = 7; argv[i][j] != '\0'; j++) {
+                dir_path[j-7] = argv[i][j];
+            }
+            dir_path[taille] = '\0';
+        } 
+    }
+    if (test) {
+        start_test(dir_path, h1, v1, h2, v2, h3, v3);
+        return 0;
     }
     char ppm_filename[strlen(argv[argc - 1])];
     strcpy(ppm_filename, argv[argc - 1]);
 
-    FILE *input = fopen(argv[argc - 1], "r");
-    if (input == NULL) {
-        perror("Ouverture du fichier d'entrée n'a pas marché");
-        exit(EXIT_FAILURE);
-    }
+    double time_taken = ppm2jpeg(ppm_filename, jpg_new_filename, cpu, h1, v2, h2, v2, h3, v3);
+    printf("time taken in seconds: %f\n", time_taken);
 
-    uint32_t width;
-    uint32_t height;
-    if (read_parameters(input, &width, &height)) { //Cas RGB
-        printf("Le type de fichier lu est : P6\n");
-
-        /* On crée les tables de huffman pour les composantes Y et Cb/Cr */
-        struct huff_table *ht_dc_Y = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
-                                          htables_symbols[DC][Y], htables_nb_symbols[DC][Y]);
-        struct huff_table *ht_ac_Y = huffman_table_build(htables_nb_symb_per_lengths[AC][Y],
-                                          htables_symbols[AC][Y], htables_nb_symbols[AC][Y]);
-        struct huff_table *ht_dc_C = huffman_table_build(htables_nb_symb_per_lengths[DC][Cb], 
-                                        htables_symbols[DC][Cb], htables_nb_symbols[DC][Cb]);
-        struct huff_table *ht_ac_C = huffman_table_build(htables_nb_symb_per_lengths[AC][Cb], 
-                                        htables_symbols[AC][Cb], htables_nb_symbols[AC][Cb]);
-
-        /* On crée le fichier de sortie en commençant par écrire son header */
-        struct jpeg *jpg;
-        if (jpg_new_filename == NULL) {
-            char jpg_filename[] = "default.jpg";
-            jpg = write_jpeg_color_header(ppm_filename, jpg_filename, width, height,
-                         ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, h1, v1, h2, v2, h3, v3);
-        } else {
-            jpg = write_jpeg_color_header(ppm_filename, jpg_new_filename, width, height,
-                         ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, h1, v1, h2, v2, h3, v3);
-        }
-        
-        /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
-        struct bitstream *stream = jpeg_get_bitstream(jpg);
-        treat_image_color(input, width, height, ht_dc_Y, ht_ac_Y, ht_dc_C, ht_ac_C, 
-                        stream, h1, v1, h2, v2, h3, v3);
-
-        /* On écrit le footer pour finaliser le fichier jpeg */
-        jpeg_write_footer(jpg);
-
-        /* Enfin on détruit tout */
-        jpeg_destroy(jpg);
-        huffman_table_destroy(ht_dc_Y);
-        huffman_table_destroy(ht_ac_Y);
-        huffman_table_destroy(ht_dc_C);
-        huffman_table_destroy(ht_ac_C);
-
-    } else { //Cas Y
-        printf("Le type de fichier lu est : P5\n");
-
-        /* On crée les tables de huffman pour la composante Y */
-        struct huff_table *ht_dc = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
-                                        htables_symbols[DC][Y], htables_nb_symbols[DC][Y]);
-        struct huff_table *ht_ac = huffman_table_build(htables_nb_symb_per_lengths[AC][Y], 
-                                        htables_symbols[AC][Y], htables_nb_symbols[AC][Y]);
-        struct jpeg *jpg;
-
-        /* On crée le fichier de sortie en commençant par écrire son header */
-        if (jpg_new_filename == NULL) {
-            char jpg_filename[] = "default.jpg";
-            jpg = write_jpeg_gris_header(ppm_filename, jpg_filename, width, height, ht_dc, ht_ac);
-        } else {
-            jpg = write_jpeg_gris_header(ppm_filename, jpg_new_filename, width, height, ht_dc, ht_ac);
-        }
-
-        /* On crée le bitstream du fichier jpeg et on encode chaque pixel de chaque mcu dans le fichier */
-        struct bitstream *stream = jpeg_get_bitstream(jpg);
-        treat_image_grey(input, width, height, ht_dc, ht_ac, stream);
-        
-        /* On écrit le footer pour finaliser le fichier jpeg */
-        jpeg_write_footer(jpg);
-
-        /* Enfin on détruit tout */
-        jpeg_destroy(jpg);
-        huffman_table_destroy(ht_dc);
-        huffman_table_destroy(ht_ac);
-    }
-    fclose(input);
-
-    // On libère le nouveau nom du fichier de sortie s'il existe.
-    if (jpg_new_filename != NULL) {
-        free(jpg_new_filename);
-    }
-    /* Tests pour debugguer notre module */
-    // struct bitstream *stream = bitstream_create("./tests.jpg");
-    // bitstream_write_bits(stream, 0xffda, 16, true);
-    // bitstream_write_bits(stream, 0x16, 8, false);
-    // bitstream_write_bits(stream, 0xff, 8, false);
-    // bitstream_write_bits(stream, 0x156, 12, false);
-    // bitstream_write_bits(stream, 0x5, 4, false);
-    // bitstream_write_bits(stream, 0x7, 3, false);
-    // bitstream_write_bits(stream, 0xffda, 16, true);
-    end = clock();
-    double time_used = ((double) end - start) / CLOCKS_PER_SEC;
-    printf("time used in seconds: %f\n", time_used);
-    exit(EXIT_SUCCESS);
+    return 0;
 }
