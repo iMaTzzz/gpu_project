@@ -235,7 +235,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
         printf("nb_images: %u\n", nb_images);
         nb_images += 1;
         printf("nb_images: %u\n", nb_images);
-        if (nb_images == 2) {
+        if (nb_images == 3) {
             return;
         }
     }
