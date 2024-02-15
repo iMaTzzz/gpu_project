@@ -91,6 +91,7 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
 {
     clock_t start, end;
     start = clock();
+    printf("ppm_filename: %s\n", ppm_filename);
     FILE *input = fopen(ppm_filename, "r");
     if (input == NULL) {
         perror("Ouverture du fichier d'entrée n'a pas marché");
@@ -227,7 +228,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                 mean_time_taken_gpu /= nb_of_tests;
                 printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", entry->d_name, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
             }
-            if (strcmp("shaun_the_sheen.ppm", entry->d_name) == 0) return;
+            if (strcmp("../images/shaun_the_sheen.ppm", entry->d_name) == 0) return;
         }
     }
 
