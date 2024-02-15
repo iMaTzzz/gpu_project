@@ -207,7 +207,7 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
             }
             mean_time_taken_cpu /= 10;
             mean_time_taken_gpu /= 10;
-            printf("Time taken on %s: CPU=%d, GPU=%d\n", filename, mean_time_taken_cpu, mean_time_taken_gpu);
+            printf("Time taken on %s: CPU=%f, GPU=%f\n", filename, mean_time_taken_cpu, mean_time_taken_gpu);
         }
     }
 
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
     char ppm_filename[strlen(argv[argc - 1])];
     strcpy(ppm_filename, argv[argc - 1]);
 
-    clock_t time_taken = ppm2jpeg(ppm_filename, jpg_new_filename, cpu, h1, v2, h2, v2, h3, v3);
+    double time_taken = ppm2jpeg(ppm_filename, jpg_new_filename, cpu, h1, v2, h2, v2, h3, v3);
     printf("time taken in seconds: %f\n", time_taken);
 
     return 0;
