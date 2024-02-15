@@ -29,9 +29,9 @@ static void verif_params(char **argv)
     fprintf(stderr, "\t- --sample=h1xv1,h2xv2,h3xv3 pour définir les facteurs d'échantillonnage hxv des trois composantes de couleur ;\n");
     fprintf(stderr, "\t- input.ppm est le nom du fichier ppm à convertir ;\n");
     fprintf(stderr, "___________________________________________________________________ \n");
-    fprintf(stderr, "Usage: %s --test:relative_directory_path \n", argv[0]);
+    fprintf(stderr, "Usage: %s --test=relative_directory_path \n", argv[0]);
     fprintf(stderr, "où:\n");
-    fprintf(stderr, "\t- --test:relative_directory_path pour tester toutes les images dans le directory sur les deux versions ;\n");
+    fprintf(stderr, "\t- --test=relative_directory_path pour tester toutes les images dans le directory sur les deux versions ;\n");
     exit(EXIT_FAILURE);
 }
 
