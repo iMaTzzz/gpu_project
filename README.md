@@ -40,21 +40,14 @@ The JPEG Encoder is designed to efficiently compress images into the JPEG format
     ```
 
 3. **Run the Encoder**: After building the project, you can run the JPEG encoder on the provided images.
-If you want to run the CPU version on an image located in the images directory (<image>=invader.pgm):
+Here are three examples (Code is provided below):
+    - If you want to run the CPU version on an image located in the *images* directory (First example)
+    - If you want to run the GPU version on an image located in the *images* directory (Second example)
+    - If you want to run both versions on all the images located in the *images* directory (Third example)
 
     ```bash
         ./ppm2jpeg ../images/<image>
-    ```
-
-If you want to run the GPU version on an image located in the images directory(<image>=zig-zag.ppm):
-
-    ```bash
         ./ppm2jpeg --gpu ../images/<image>
-    ```
-
-If you want to run tests on both versions on all the images located in the images directory:
-
-    ```bash
         ./ppm2jpeg --test:../images
     ```
 
