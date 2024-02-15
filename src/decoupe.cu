@@ -148,6 +148,38 @@ void treat_image_grey(FILE *image, uint32_t width, uint32_t height, struct huff_
     free(index);
 }
 
+int get_file_values(int16_t *mcus_array) {
+    FILE *file;
+    char line[20]; // Assuming each number occupies at most 20 characters including newline and null terminator
+    int i = 0;
+
+    // Open the file for reading
+    file = fopen("mcus_array.txt", "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    // Read each line until the end of file
+    while (fgets(line, sizeof(line), file) != NULL && i < 5100 * 64 * 3) {
+        // Convert string to int16_t and store in the array
+        mcus_array[i] = (int16_t)strtoimax(line, NULL, 10);
+        i++;
+    }
+
+    // Close the file
+    fclose(file);
+
+    for (uint32_t i = 0; i < 5100 * 64 * 3; i++) {
+        printf("%d\n", mcus_array[i]);
+    }
+
+    // Now you have the numbers in the 'numbers' array
+    // Do whatever you need to do with them
+
+    return 0;
+}
+
 extern "C"
 void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff_table *ht_dc_Y, 
                         struct huff_table *ht_ac_Y, struct huff_table *ht_dc_C, struct huff_table *ht_ac_C, 
@@ -308,40 +340,41 @@ void treat_image_color(FILE *image, uint32_t width, uint32_t height, struct huff
         // Call GPU
         encoding(mcus_array, d_mcus_array, nb_mcus_allocated*3, mcus_array_size, true);
 
+        get_file_values(mcus_array);
         // print MCUs line
-        for (uint32_t i_mcu = 0; i_mcu < nb_mcus_allocated; ++i_mcu) {
-            printf("--- mcu Y ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_array[i_mcu * 3 * 64 + i * 8 + j]);
-                }
-                printf("\n");
-            }
-            printf("\n\n");
+        // for (uint32_t i_mcu = 0; i_mcu < nb_mcus_allocated; ++i_mcu) {
+        //     printf("--- mcu Y ---\n");
+        //     printf("mcu number %d\n", mcu_index);
+        //     for (uint8_t i = 0; i < 8; i++) {
+        //         for (uint8_t j = 0; j < 8; j++) {
+        //             printf("%d ", mcus_array[i_mcu * 3 * 64 + i * 8 + j]);
+        //         }
+        //         printf("\n");
+        //     }
+        //     printf("\n\n");
 
-            printf("--- mcu Cb ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_array[i_mcu * 3 * 64 + 64 + i * 8 + j]);
-                }
-                printf("\n");
-            }
-            printf("\n\n");
+        //     printf("--- mcu Cb ---\n");
+        //     printf("mcu number %d\n", mcu_index);
+        //     for (uint8_t i = 0; i < 8; i++) {
+        //         for (uint8_t j = 0; j < 8; j++) {
+        //             printf("%d ", mcus_array[i_mcu * 3 * 64 + 64 + i * 8 + j]);
+        //         }
+        //         printf("\n");
+        //     }
+        //     printf("\n\n");
 
-            printf("--- mcu Cr ---\n");
-            printf("mcu number %d\n", mcu_index);
-            for (uint8_t i = 0; i < 8; i++) {
-                for (uint8_t j = 0; j < 8; j++) {
-                    printf("%d ", mcus_array[i_mcu * 3 * 64 + 128 + i * 8 + j]);
-                }
-                printf("\n");
-            }
-            printf("\n\n");
+        //     printf("--- mcu Cr ---\n");
+        //     printf("mcu number %d\n", mcu_index);
+        //     for (uint8_t i = 0; i < 8; i++) {
+        //         for (uint8_t j = 0; j < 8; j++) {
+        //             printf("%d ", mcus_array[i_mcu * 3 * 64 + 128 + i * 8 + j]);
+        //         }
+        //         printf("\n");
+        //     }
+        //     printf("\n\n");
 
-            mcu_index++;
-        }
+        //     mcu_index++;
+        // }
 
         // Take result from GPU
         // Call coding from results of GPU
