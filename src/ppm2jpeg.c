@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "coding.h"
 #include "htables.h"
 #include "huffman.h"
@@ -201,14 +202,20 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
         if (entry->d_type == DT_REG) { // Check if it's a regular file
             char filename[1024]; // Assuming max file name length is 1024 characters
             snprintf(filename, sizeof(filename), "%s/%s", dir_path, entry->d_name);
-            printf("filename:%s\n", filename);
+            // Get the size of the file
+            struct stat st;
+            if (stat(filename, &st) == -1) {
+                perror("Failed to get file size");
+                continue; // Skip to the next file
+            }
+            long file_size = st.st_size;
             for (uint8_t i = 0; i < 10; ++i) {
                 mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
                 mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
             }
             mean_time_taken_cpu /= 10;
             mean_time_taken_gpu /= 10;
-            printf("Time taken on %s: CPU=%f, GPU=%f\n", filename, mean_time_taken_cpu, mean_time_taken_gpu);
+            printf("File: %s, Size: %ld bytes, Time taken: CPU=%f, GPU=%f\n", filename, file_size, mean_time_taken_cpu, mean_time_taken_gpu);
         }
     }
 
