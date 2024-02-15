@@ -178,7 +178,7 @@ int main(int argc, char **argv)
     uint32_t width;
     uint32_t height;
     if (read_parameters(input, &width, &height)) { //Cas RGB
-        printf("Le type de fichier lu est : P6\n");
+        // printf("Le type de fichier lu est : P6\n");
 
         /* On crée les tables de huffman pour les composantes Y et Cb/Cr */
         struct huff_table *ht_dc_Y = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
         huffman_table_destroy(ht_ac_C);
 
     } else { //Cas Y
-        printf("Le type de fichier lu est : P5\n");
+        // printf("Le type de fichier lu est : P5\n");
 
         /* On crée les tables de huffman pour la composante Y */
         struct huff_table *ht_dc = huffman_table_build(htables_nb_symb_per_lengths[DC][Y], 
