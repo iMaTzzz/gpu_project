@@ -91,7 +91,6 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
 {
     clock_t start, end;
     start = clock();
-    printf("ppm_filename: %s\n", ppm_filename);
     FILE *input = fopen(ppm_filename, "r");
     if (input == NULL) {
         perror("Ouverture du fichier d'entrée n'a pas marché");
@@ -100,7 +99,6 @@ static double ppm2jpeg(char* ppm_filename, char* jpg_new_filename, bool cpu, uin
     uint32_t width;
     uint32_t height;
     if (read_parameters(input, &width, &height)) { //Cas RGB
-        printf("width: %u, height: %u\n", width, height);
         // printf("Le type de fichier lu est : P6\n");
 
         /* On crée les tables de huffman pour les composantes Y et Cb/Cr */
@@ -216,7 +214,6 @@ static void start_test(char* dir_path, uint8_t h1, uint8_t v1, uint8_t h2, uint8
                 long file_size = st.st_size;
                 uint8_t nb_of_tests = 10;
                 for (uint8_t i = 0; i < nb_of_tests; ++i) {
-                    printf("%u\n", i);
                     // mean_time_taken_cpu += ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
                     // mean_time_taken_gpu += ppm2jpeg(filename, NULL, false, h1, v1, h2, v2, h3, v3);  // on GPU
                     double tmp_cpu = ppm2jpeg(filename, NULL, true, h1, v1, h2, v2, h3, v3); // on CPU
